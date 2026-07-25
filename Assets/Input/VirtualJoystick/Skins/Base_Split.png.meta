@@ -96,3 +96,10 @@ TextureImporter:
   userData: 
   assetBundleName: 
   assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 261317
+  packageName: Virtual Joystick Pack
+  packageVersion: 1.2.1
+  assetPath: Assets/Input/VirtualJoystick/Skins/Base_Split.png
+  uploadId: 916198

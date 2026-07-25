@@ -3,34 +3,38 @@ using UnityEngine;
 
 public class VehicleHealth : MonoBehaviour
 {
-    [SerializeField] private int maxHealth = 100; // Santé maximale du véhicule
+    [SerializeField] private int maxHealth = 100;
     private int currentHealth;
 
-    [SerializeField] private GameObject damageVFX; // VFX pour la prise de dégâts
-    [SerializeField] private GameObject destructionVFX; // VFX pour la destruction du véhicule
-    [SerializeField] private Transform vfxSpawnPoint; // Point d'apparition des VFX
-    [SerializeField] private Transform barrierSpawnPoint; // Point d'apparition pour la barrière
-    [SerializeField] private float invincibilityDuration = 5f; // Durée par défaut d'invincibilité après avoir pris des dégâts
-    private bool isInvincible = false; // Vérifie si le véhicule est temporairement invincible
-    private float invincibilityEndTime; // Temps de fin de l'invincibilité
-    private GameObject activeBarrier; // Référence à la barrière active
+    [SerializeField] private GameObject damageVFX;
+    [SerializeField] private GameObject destructionVFX;
+    [SerializeField] private Transform vfxSpawnPoint;
+    [SerializeField] private Transform barrierSpawnPoint;
+    [SerializeField] private float invincibilityDuration = 5f;
+    private bool isInvincible = false;
+    private float invincibilityEndTime;
+    private GameObject activeBarrier;
 
-    [SerializeField] private GameObject barrierPrefab; // Prefab de la barrière
+    [SerializeField] private GameObject barrierPrefab;
 
-    public int MaxHealth => maxHealth; // Propriété pour accéder à la santé maximale
-    public int CurrentHealth => currentHealth; // Propriété pour accéder à la santé actuelle
+    public int MaxHealth => maxHealth;
+    public int CurrentHealth => currentHealth;
 
     private void Start()
     {
-        currentHealth = maxHealth; // Initialiser la santé au maximum
+        currentHealth = maxHealth;
+    }
+
+    public float GetRemainingInvincibilityTime()
+    {
+        return Mathf.Max(0f, invincibilityEndTime - Time.time);
     }
 
     public void TakeDamage(int damageAmount)
     {
-        if (!isInvincible) // Vérifier si le véhicule est invincible
+        if (!isInvincible)
         {
             currentHealth -= damageAmount;
-
             Debug.Log($"Véhicule a pris {damageAmount} dégâts. Santé restante : {currentHealth}");
 
             if (damageVFX != null)
@@ -57,40 +61,36 @@ public class VehicleHealth : MonoBehaviour
     {
         currentHealth += restoreAmount;
         currentHealth = Mathf.Clamp(currentHealth, 0, maxHealth);
-
         Debug.Log($"Véhicule a récupéré {restoreAmount} de santé. Santé actuelle : {currentHealth}");
     }
 
     public void ActivateInvulnerability(float duration)
     {
-        // Activer l'invulnérabilité en démarrant une nouvelle coroutine
         StartCoroutine(InvincibilityCoroutine(duration));
     }
 
     public void ExtendInvulnerability(float additionalDuration)
     {
-        // Si déjà invincible, prolonger l'invulnérabilité
         invincibilityEndTime += additionalDuration;
-        Debug.Log("Invulnérabilité prolongée.");
+        Debug.Log("Invulnérabilité prolongée jusqu'à : " + invincibilityEndTime);
     }
 
     public bool IsInvulnerable()
     {
-        // Vérifie si l'invulnérabilité est toujours active
         return Time.time < invincibilityEndTime;
     }
 
     private IEnumerator InvincibilityCoroutine(float duration)
     {
         isInvincible = true;
-        invincibilityEndTime = Time.time + duration; // Calculer le temps de fin de l'invulnérabilité
-        Debug.Log("Véhicule est maintenant invulnérable.");
+        invincibilityEndTime = Time.time + duration;
+        Debug.Log("Véhicule est maintenant invulnérable jusqu'à : " + invincibilityEndTime);
 
         yield return new WaitForSeconds(duration);
 
         if (Time.time >= invincibilityEndTime)
         {
-            isInvincible = false; // Désactiver l'invulnérabilité après la durée
+            isInvincible = false;
             Debug.Log("Véhicule est à nouveau vulnérable.");
         }
     }
@@ -106,8 +106,7 @@ public class VehicleHealth : MonoBehaviour
         {
             activeBarrier = Instantiate(barrierPrefab, barrierSpawnPoint.position, barrierSpawnPoint.rotation);
             activeBarrier.transform.SetParent(transform);
-
-            StartCoroutine(DisableBarrier(duration));
+            StartCoroutine(DisableBarrierAfterTime(duration));
         }
         else
         {
@@ -115,7 +114,7 @@ public class VehicleHealth : MonoBehaviour
         }
     }
 
-    private IEnumerator DisableBarrier(float duration)
+    private IEnumerator DisableBarrierAfterTime(float duration)
     {
         yield return new WaitForSeconds(duration);
 
@@ -135,6 +134,12 @@ public class VehicleHealth : MonoBehaviour
         }
 
         Debug.Log("Véhicule détruit!");
+
+        if (GameManager.Instance != null)
+        {
+            GameManager.Instance.TriggerGameOver();
+        }
+
         gameObject.SetActive(false);
     }
 

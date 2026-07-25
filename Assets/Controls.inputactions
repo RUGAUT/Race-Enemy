@@ -1,4 +1,5 @@
 {
+    "version": 1,
     "name": "Controls",
     "maps": [
         {
@@ -9,7 +10,7 @@
                     "name": "New action",
                     "type": "Button",
                     "id": "ed8dc0e6-dd33-4a91-99f5-b101bec53599",
-                    "expectedControlType": "Button",
+                    "expectedControlType": "",
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": false

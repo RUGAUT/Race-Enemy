@@ -1,72 +1,70 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.InputSystem;
 
 public class PlayerControls : MonoBehaviour
 {
-    [SerializeField] private InputActionReference moveActionToUse;
+    [SerializeField] private int joystickID = 0; // ID du Virtual Joystick à utiliser
     [SerializeField] private float speed = 5f;
     [SerializeField] private float turnSpeed = 5f; // Vitesse de rotation pour pencher le véhicule
-    [SerializeField] private float maxTurnAngle = 15f; // Angle maximum de rotation latérale (penchement)
+    [SerializeField] private float maxTurnAngle = 15f; // Angle maximum de rotation latérale
     [SerializeField] private float tiltAngle = 10f; // Angle de penchement sur l'axe Z
 
-    // Variable pour suivre la rotation actuelle sur l'axe Y (direction) et Z (penchement)
     private float currentYAngle = 0f; // Rotation autour de l'axe Y
     private float currentZAngle = 0f; // Rotation autour de l'axe Z (penchement)
 
-    // Update is called once per frame
     void Update()
     {
-        Vector2 moveDirection = moveActionToUse.action.ReadValue<Vector2>();
+        // Récupère l'instance du Virtual Joystick avec l'ID spécifié
+        Terresquall.VirtualJoystick joystick = Terresquall.VirtualJoystick.GetInstance(joystickID);
 
-        // Déplacement du véhicule (inversé : haut = gauche, bas = droite)
-        if (moveDirection.y > 0) // Vers le haut = se déplacer à gauche (inversé)
+        // Si le joystick n'existe pas, on ne fait rien
+        if (joystick == null)
         {
-            transform.Translate(-speed * Time.deltaTime, 0, 0); // Déplacement à gauche
-        }
-        else if (moveDirection.y < 0) // Vers le bas = se déplacer à droite (inversé)
-        {
-            transform.Translate(speed * Time.deltaTime, 0, 0); // Déplacement à droite
+            Debug.LogWarning("Aucun Virtual Joystick trouvé avec l'ID : " + joystickID);
+            return;
         }
 
-        // Gestion de la rotation pour pencher le véhicule (axe Z)
-        if (moveDirection.y != 0) // Si le joystick est poussé vers le haut ou le bas
+        // Récupère les entrées du joystick (méthode d'instance)
+        Vector2 moveDirection = joystick.GetAxis();
+
+        // --- Déplacement ---
+        if (moveDirection.y > 0) // Vers le haut = gauche (inversé)
         {
-            // Incliner le véhicule selon la direction (y > 0 pour gauche, y < 0 pour droite)
-            if (moveDirection.y > 0) // Pencher vers la gauche
-            {
-                currentZAngle = Mathf.Lerp(currentZAngle, tiltAngle, turnSpeed * Time.deltaTime);
-            }
-            else if (moveDirection.y < 0) // Pencher vers la droite
-            {
-                currentZAngle = Mathf.Lerp(currentZAngle, -tiltAngle, turnSpeed * Time.deltaTime);
-            }
+            transform.Translate(-speed * Time.deltaTime, 0, 0);
         }
-        else // Si aucune direction n'est donnée, réinitialiser le penchement
+        else if (moveDirection.y < 0) // Vers le bas = droite (inversé)
+        {
+            transform.Translate(speed * Time.deltaTime, 0, 0);
+        }
+
+        // --- Penchement (axe Z) ---
+        if (moveDirection.y != 0)
+        {
+            currentZAngle = Mathf.Lerp(
+                currentZAngle,
+                moveDirection.y > 0 ? tiltAngle : -tiltAngle,
+                turnSpeed * Time.deltaTime
+            );
+        }
+        else
         {
             currentZAngle = Mathf.Lerp(currentZAngle, 0, turnSpeed * Time.deltaTime);
         }
 
-        // Gestion de la rotation autour de l'axe Y
-        if (moveDirection.x != 0) // S'il y a un mouvement latéral
+        // --- Rotation (axe Y) ---
+        if (moveDirection.x != 0)
         {
-            if (moveDirection.x > 0) // Rotation à droite
-            {
-                currentYAngle = Mathf.Clamp(currentYAngle + turnSpeed * Time.deltaTime, 0, maxTurnAngle);
-            }
-            else if (moveDirection.x < 0) // Rotation à gauche
-            {
-                currentYAngle = Mathf.Clamp(currentYAngle - turnSpeed * Time.deltaTime, -maxTurnAngle, 0);
-            }
+            currentYAngle = Mathf.Clamp(
+                currentYAngle + (moveDirection.x > 0 ? 1 : -1) * turnSpeed * Time.deltaTime,
+                -maxTurnAngle,
+                maxTurnAngle
+            );
         }
-        else // Réinitialiser la rotation Y lorsque le véhicule ne tourne pas
+        else
         {
             currentYAngle = Mathf.MoveTowards(currentYAngle, 0, turnSpeed * Time.deltaTime);
         }
 
-        // Appliquer la rotation combinée (Y pour direction, Z pour penchement)
-        Quaternion targetRotation = Quaternion.Euler(0, currentYAngle, currentZAngle);
-        transform.rotation = targetRotation;
+        // Applique la rotation combinée
+        transform.rotation = Quaternion.Euler(0, currentYAngle, currentZAngle);
     }
 }

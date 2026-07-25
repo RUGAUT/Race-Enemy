@@ -12,15 +12,16 @@ public class BarrierBonus : MonoBehaviour
             VehicleHealth vehicleHealth = other.GetComponent<VehicleHealth>();
             if (vehicleHealth != null)
             {
-                // Si déjà invulnérable, prolonge l'invulnérabilité ET réactive la barrière
+                // Si déjà invulnérable, prolonge l'invulnérabilité ET réactive la barrière avec la durée TOTALE
                 if (vehicleHealth.IsInvulnerable())
                 {
+                    float remainingTime = vehicleHealth.GetRemainingInvincibilityTime();
                     vehicleHealth.ExtendInvulnerability(duration);
-                    vehicleHealth.ActivateBarrier(duration); // Réactive la barrière
+                    vehicleHealth.ActivateBarrier(remainingTime + duration); // Durée totale = restant + nouveau
                 }
                 else
                 {
-                    // Active l'invulnérabilité et la barrière
+                    // Active l'invulnérabilité et la barrière avec la durée complète
                     vehicleHealth.ActivateInvulnerability(duration);
                     vehicleHealth.ActivateBarrier(duration);
                 }

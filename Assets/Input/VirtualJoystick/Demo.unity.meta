@@ -5,3 +5,10 @@ DefaultImporter:
   userData: 
   assetBundleName: 
   assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 261317
+  packageName: Virtual Joystick Pack
+  packageVersion: 1.2.1
+  assetPath: Assets/Input/VirtualJoystick/Demo.unity
+  uploadId: 916198
