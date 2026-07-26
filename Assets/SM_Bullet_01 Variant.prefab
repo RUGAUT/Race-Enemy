@@ -53,6 +53,16 @@ PrefabInstance:
       propertyPath: m_Name
       value: SM_Bullet_01 Variant
       objectReference: {fileID: 0}
+    - target: {fileID: 2086261179823682334, guid: 8ad2040e85c6dd545ad89e436ed1c134,
+        type: 3}
+      propertyPath: m_Layer
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 2086261179823682334, guid: 8ad2040e85c6dd545ad89e436ed1c134,
+        type: 3}
+      propertyPath: m_TagString
+      value: Bullet
+      objectReference: {fileID: 0}
     - target: {fileID: 2787594106011184721, guid: 8ad2040e85c6dd545ad89e436ed1c134,
         type: 3}
       propertyPath: m_LocalScale.x
@@ -122,6 +132,11 @@ PrefabInstance:
         type: 3}
       propertyPath: hitVFX
       value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: 8155758887353419079, guid: 8ad2040e85c6dd545ad89e436ed1c134,
+        type: 3}
+      propertyPath: m_Layer
+      value: 8
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

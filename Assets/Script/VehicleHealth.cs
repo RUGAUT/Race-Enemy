@@ -6,17 +6,19 @@ public class VehicleHealth : MonoBehaviour
     [SerializeField] private int maxHealth = 100;
     private int currentHealth;
 
+    [Header("VFX & Spawns")]
     [SerializeField] private GameObject damageVFX;
     [SerializeField] private GameObject destructionVFX;
     [SerializeField] private Transform vfxSpawnPoint;
     [SerializeField] private Transform barrierSpawnPoint;
 
-    // J'ai retiré la variable invincibilityDuration d'ici car c'est le Bonus qui décide de la durée maintenant.
+    [Header("Barrier Settings")]
+    [SerializeField] private GameObject barrierPrefab;
+    [SerializeField] private GameObject barrierDestroyObstacleVFX;
+
     private bool isInvincible = false;
     private float invincibilityEndTime;
     private GameObject activeBarrier;
-
-    [SerializeField] private GameObject barrierPrefab;
 
     public int MaxHealth => maxHealth;
     public int CurrentHealth => currentHealth;
@@ -44,7 +46,6 @@ public class VehicleHealth : MonoBehaviour
             {
                 DestroyVehicle();
             }
-            // SUPPRESSION ICI : Le véhicule ne devient plus invincible automatiquement après un dégât !
         }
         else
         {
@@ -84,21 +85,17 @@ public class VehicleHealth : MonoBehaviour
 
     public bool ActivateBarrier(float duration)
     {
-        // Si une barrière est déjà active, on bloque
         if (activeBarrier != null)
         {
             return false;
         }
 
-        // Sinon, on la crée
         if (barrierPrefab != null && barrierSpawnPoint != null)
         {
             activeBarrier = Instantiate(barrierPrefab, barrierSpawnPoint.position, barrierSpawnPoint.rotation);
             activeBarrier.transform.SetParent(transform);
 
-            // On active l'invincibilité ici
             ActivateInvulnerability(duration);
-
             StartCoroutine(DisableBarrierAfterTime(duration));
             return true;
         }
@@ -114,7 +111,7 @@ public class VehicleHealth : MonoBehaviour
         {
             Destroy(activeBarrier);
             activeBarrier = null;
-            isInvincible = false; // Sécurité supplémentaire
+            isInvincible = false;
         }
     }
 
@@ -133,15 +130,12 @@ public class VehicleHealth : MonoBehaviour
         gameObject.SetActive(false);
     }
 
-    private void OnTriggerEnter(Collider other)
+    // NOUVEAU : Fonction appelée par l'obstacle quand il est détruit par la barrière
+    public void PlayBarrierDestroyVFX(Vector3 position)
     {
-        if (other.CompareTag("Obstacle"))
+        if (barrierDestroyObstacleVFX != null)
         {
-            ObstacleDamage obstacleDamage = other.GetComponent<ObstacleDamage>();
-            if (obstacleDamage != null)
-            {
-                TakeDamage(obstacleDamage.GetDamageAmount());
-            }
+            Instantiate(barrierDestroyObstacleVFX, position, Quaternion.identity);
         }
     }
 }

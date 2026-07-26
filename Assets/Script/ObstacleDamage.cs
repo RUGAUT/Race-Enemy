@@ -6,21 +6,31 @@ public class ObstacleDamage : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        // Vérifie si l'objet qui entre en collision est le véhicule
-        if (other.CompareTag("Player")) // Assure-toi que ton véhicule a le tag "Vehicle"
+        if (other.CompareTag("Player"))
         {
             VehicleHealth vehicleHealth = other.GetComponent<VehicleHealth>();
             if (vehicleHealth != null)
             {
-                vehicleHealth.TakeDamage(damageAmount);
-            }
+                if (vehicleHealth.HasActiveBarrier)
+                {
+                    // 1. Le joueur a la barrière : on lui demande de jouer le VFX
+                    vehicleHealth.PlayBarrierDestroyVFX(transform.position);
 
-            // Fais disparaître l'obstacle
-            Destroy(gameObject);
+                    // 2. L'obstacle se détruit LUI-MÊME
+                    Destroy(gameObject);
+                }
+                else
+                {
+                    // 3. Pas de barrière : le joueur prend des dégâts
+                    vehicleHealth.TakeDamage(damageAmount);
+
+                    // 4. L'obstacle se détruit LUI-MÊME
+                    Destroy(gameObject);
+                }
+            }
         }
     }
 
-    // Méthode pour accéder aux dégâts (optionnelle)
     public int GetDamageAmount()
     {
         return damageAmount;

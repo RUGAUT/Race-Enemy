@@ -4,90 +4,104 @@ using UnityEngine;
 
 public class BackgroundGenerator : MonoBehaviour
 {
-    [SerializeField] private List<GameObject> backgroundPrefabs; // Liste des prefabs d'arrière-plan
-    [SerializeField] private int initialBackgroundCount = 5; // Nombre initial de morceaux d'arrière-plan générés
-    [SerializeField] private Transform player; // Référence au joueur (ou au véhicule)
-    [SerializeField] private float backgroundLength = 30f; // Longueur de chaque morceau d'arrière-plan
-    [SerializeField] private Vector3 spawnPosition = new Vector3(0f, 0f, 0f); // Position initiale de la zone de spawn
-    [SerializeField] private Vector3 spawnSize = new Vector3(10f, 0f, 30f); // Taille de la zone de spawn (X : largeur, Z : longueur)
-    [SerializeField] private Vector3 backgroundRotation = Vector3.zero; // Rotation de l'apparition de l'arrière-plan
-    [SerializeField] private float backgroundLifetime = 5f; // Durée de vie d'un morceau d'arrière-plan avant de disparaître
-    [SerializeField] private float minDistanceBetweenBackgrounds = 1f; // Distance minimale entre deux morceaux d'arrière-plan
+    [SerializeField] private List<GameObject> backgroundPrefabs;
+    [SerializeField] private int initialBackgroundCount = 5;
+    // J'ai retiré le Transform player fixe d'ici
 
-    private float nextSpawnZ; // Position Z pour le prochain morceau d'arrière-plan
-    private Queue<GameObject> activeBackgrounds = new Queue<GameObject>(); // Files d'attente des arrière-plans actifs
+    [SerializeField] private float backgroundLength = 30f;
+    [SerializeField] private Vector3 spawnPosition = new Vector3(0f, 0f, 0f);
+    [SerializeField] private Vector3 spawnSize = new Vector3(10f, 0f, 30f);
+    [SerializeField] private Vector3 backgroundRotation = Vector3.zero;
+    [SerializeField] private float backgroundLifetime = 5f;
+    [SerializeField] private float minDistanceBetweenBackgrounds = 1f;
 
-    void Start()
-    {
-        nextSpawnZ = spawnPosition.z; // Initialisation à la position de spawn définie
+    private float nextSpawnZ;
+    private Queue<GameObject> activeBackgrounds = new Queue<GameObject>();
 
-        // Générer les morceaux d'arrière-plan initiaux
-        for (int i = 0; i < initialBackgroundCount; i++)
-        {
-            SpawnBackground();
-        }
-    }
+    private Transform activePlayer; // Référence dynamique
+    private bool hasInitialized = false; // Sécurité pour le lancement initial
 
     void Update()
     {
-        // Si le joueur dépasse un certain point, on génère un nouveau morceau d'arrière-plan
-        if (player.position.z > nextSpawnZ - (initialBackgroundCount * backgroundLength))
+        // 1. Cherche le joueur actuel s'il est manquant ou désactivé
+        if (activePlayer == null || !activePlayer.gameObject.activeInHierarchy)
+        {
+            FindActivePlayer();
+        }
+
+        // 2. Met en pause si aucun véhicule n'est sur la scène
+        if (activePlayer == null) return;
+
+        // 3. Premier lancement : ne s'exécute qu'une seule fois quand le premier véhicule est trouvé
+        if (!hasInitialized)
+        {
+            nextSpawnZ = spawnPosition.z;
+            for (int i = 0; i < initialBackgroundCount; i++)
+            {
+                SpawnBackground();
+            }
+            hasInitialized = true;
+        }
+
+        // 4. Suit la progression du véhicule ACTIF
+        if (activePlayer.position.z > nextSpawnZ - (initialBackgroundCount * backgroundLength))
         {
             SpawnBackground();
         }
     }
 
-    // Générer un nouveau morceau d'arrière-plan à la position désirée
+    // Nouvelle fonction de recherche automatique
+    private void FindActivePlayer()
+    {
+        GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
+        if (playerObj != null)
+        {
+            activePlayer = playerObj.transform;
+        }
+    }
+
     private void SpawnBackground()
     {
-        // Générer aléatoirement une position de spawn dans la zone spécifiée
-        float randomX = Random.Range(-spawnSize.x / 2f, spawnSize.x / 2f); // Largeur aléatoire
-        float randomZ = nextSpawnZ; // On garde l'ordre sur l'axe Z pour aligner les arrière-plans
+        float randomX = Random.Range(-spawnSize.x / 2f, spawnSize.x / 2f);
+        float randomZ = nextSpawnZ;
 
-        Vector3 position = new Vector3(randomX + spawnPosition.x, spawnPosition.y, randomZ); // Position finale
+        Vector3 position = new Vector3(randomX + spawnPosition.x, spawnPosition.y, randomZ);
 
-        // Vérifier que la position est suffisament éloignée des autres morceaux d'arrière-plan
         if (IsPositionValid(position))
         {
-            // Choisir un prefab d'arrière-plan aléatoire
             GameObject backgroundPrefab = backgroundPrefabs[Random.Range(0, backgroundPrefabs.Count)];
-            GameObject background = Instantiate(backgroundPrefab, position, Quaternion.Euler(backgroundRotation)); // Instancie le morceau d'arrière-plan avec rotation
-            activeBackgrounds.Enqueue(background); // Ajoute le morceau d'arrière-plan à la file d'attente
+            GameObject background = Instantiate(backgroundPrefab, position, Quaternion.Euler(backgroundRotation));
+            activeBackgrounds.Enqueue(background);
 
-            nextSpawnZ += backgroundLength; // Met à jour la position Z pour le prochain morceau
+            nextSpawnZ += backgroundLength;
 
-            // Démarrer une coroutine pour détruire l'arrière-plan après un certain temps
             StartCoroutine(DestroyBackgroundAfterTime(background, backgroundLifetime));
         }
         else
         {
-            // Si la position n'est pas valide, on ne crée pas d'arrière-plan et on essaie de nouveau
             SpawnBackground();
         }
     }
 
-    // Vérifie si la position est valide pour éviter les chevauchements
     private bool IsPositionValid(Vector3 position)
     {
         foreach (GameObject background in activeBackgrounds)
         {
             if (Vector3.Distance(background.transform.position, position) < minDistanceBetweenBackgrounds)
             {
-                return false; // La position est trop proche d'un autre morceau d'arrière-plan
+                return false;
             }
         }
-        return true; // La position est valide
+        return true;
     }
 
-    // Coroutine pour détruire l'arrière-plan après une durée spécifiée
     private IEnumerator DestroyBackgroundAfterTime(GameObject background, float lifetime)
     {
         yield return new WaitForSeconds(lifetime);
-        activeBackgrounds.Dequeue(); // Retire l'arrière-plan de la file d'attente avant de le détruire
-        Destroy(background); // Détruit le morceau d'arrière-plan
+        activeBackgrounds.Dequeue();
+        Destroy(background);
     }
 
-    // Dessiner un gizmo pour voir la zone de spawn (utile pour débogage)
     private void OnDrawGizmos()
     {
         Gizmos.color = Color.red;

@@ -3,7 +3,6 @@ using TMPro;
 
 public class ScoreManager : MonoBehaviour
 {
-    // Ajout du Singleton pour y accéder de n'importe où
     public static ScoreManager Instance { get; private set; }
 
     [SerializeField] private Transform vehicleTransform;
@@ -16,7 +15,6 @@ public class ScoreManager : MonoBehaviour
 
     private void Awake()
     {
-        // Initialisation du Singleton
         if (Instance != null && Instance != this)
         {
             Destroy(this);
@@ -65,5 +63,16 @@ public class ScoreManager : MonoBehaviour
         {
             zombieScoreText.text = "Zombie Score: " + zombieScore.ToString();
         }
+    }
+
+    // --- NOUVEAU : Fonctions pour transmettre les scores au GameManager ---
+    public int GetFinalDistance()
+    {
+        return Mathf.FloorToInt(distanceScore);
+    }
+
+    public int GetFinalZombieScore()
+    {
+        return zombieScore;
     }
 }

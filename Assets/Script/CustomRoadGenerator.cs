@@ -3,46 +3,70 @@ using UnityEngine;
 
 public class CustomRoadGenerator : MonoBehaviour
 {
-    [SerializeField] private GameObject roadPrefab; // Prefab de la route
-    [SerializeField] private int initialRoadCount = 5; // Nombre initial de morceaux
-    [SerializeField] private Transform player; // Référence au joueur
-    [SerializeField] private float roadLength = 30f; // Longueur d'un morceau de route
-    [SerializeField] private float spawnDistanceAhead = 50f; // Distance devant le joueur pour spawner
-    [SerializeField] private float despawnDistanceBehind = 20f; // Distance derrière le joueur pour supprimer
-    [SerializeField] private Vector3 spawnPositionOffset = Vector3.zero; // Décalage de la position de spawn
-    [SerializeField] private Vector3 roadRotation = Vector3.zero; // Rotation de la route
+    [SerializeField] private GameObject roadPrefab;
+    [SerializeField] private int initialRoadCount = 5;
+    // J'ai retiré le [SerializeField] private Transform player; car on le cherche automatiquement maintenant
+
+    [SerializeField] private float roadLength = 30f;
+    [SerializeField] private float spawnDistanceAhead = 50f;
+    [SerializeField] private float despawnDistanceBehind = 20f;
+    [SerializeField] private Vector3 spawnPositionOffset = Vector3.zero;
+    [SerializeField] private Vector3 roadRotation = Vector3.zero;
 
     private Queue<GameObject> activeRoads = new Queue<GameObject>();
-    private float lastRoadZ; // Position Z du dernier morceau de route généré
+    private float lastRoadZ;
 
-    void Start()
-    {
-        lastRoadZ = player.position.z;
-        // Générer les morceaux initiaux devant le joueur
-        for (int i = 0; i < initialRoadCount; i++)
-        {
-            SpawnRoad();
-        }
-    }
+    private Transform activePlayer; // Référence dynamique au joueur actuel
+    private bool hasInitialized = false; // Pour savoir si on a déjà fait le spawn initial
 
     void Update()
     {
-        // Si le joueur s'approche du dernier morceau de route, en générer un nouveau
-        if (player.position.z > lastRoadZ - spawnDistanceAhead)
+        // 1. Vérification : Si on n'a pas de joueur ou que le joueur actuel a été désactivé, on cherche le nouveau
+        if (activePlayer == null || !activePlayer.gameObject.activeInHierarchy)
+        {
+            FindActivePlayer();
+        }
+
+        // 2. Sécurité : Si aucun véhicule "Player" n'est activé sur la scène, on met la génération en pause
+        if (activePlayer == null) return;
+
+        // 3. Initialisation : Ne se lance qu'une seule fois, dès qu'un véhicule est trouvé la première fois
+        if (!hasInitialized)
+        {
+            lastRoadZ = activePlayer.position.z;
+            for (int i = 0; i < initialRoadCount; i++)
+            {
+                SpawnRoad();
+            }
+            hasInitialized = true;
+        }
+
+        // 4. Génération continue devant le véhicule ACTIF
+        if (activePlayer.position.z > lastRoadZ - spawnDistanceAhead)
         {
             SpawnRoad();
         }
 
-        // Supprimer les morceaux de route trop derrière le joueur
-        if (activeRoads.Count > 0 && activeRoads.Peek().transform.position.z < player.position.z - despawnDistanceBehind)
+        // 5. Suppression des routes loin derrière le véhicule ACTIF
+        if (activeRoads.Count > 0 && activeRoads.Peek().transform.position.z < activePlayer.position.z - despawnDistanceBehind)
         {
             RemoveOldRoad();
         }
     }
 
+    // Fonction qui cherche automatiquement le véhicule actif sur la scène
+    private void FindActivePlayer()
+    {
+        // Assure-toi que tous tes véhicules ont bien le Tag "Player" !
+        GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
+        if (playerObj != null)
+        {
+            activePlayer = playerObj.transform;
+        }
+    }
+
     private void SpawnRoad()
     {
-        // Position devant le joueur + décalage
         Vector3 spawnPosition = new Vector3(
             spawnPositionOffset.x,
             spawnPositionOffset.y,
@@ -56,7 +80,7 @@ public class CustomRoadGenerator : MonoBehaviour
         );
 
         activeRoads.Enqueue(road);
-        lastRoadZ = spawnPosition.z; // Met à jour la position du dernier morceau
+        lastRoadZ = spawnPosition.z;
     }
 
     private void RemoveOldRoad()
@@ -68,7 +92,6 @@ public class CustomRoadGenerator : MonoBehaviour
         }
     }
 
-    // Gizmo pour visualiser la zone de spawn (optionnel)
     private void OnDrawGizmos()
     {
         Gizmos.color = Color.green;
