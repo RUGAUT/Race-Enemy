@@ -2,25 +2,45 @@ using UnityEngine;
 
 public class Zombie : MonoBehaviour
 {
-    [SerializeField] private int pointsValue = 1; // Points à ajouter au score des zombies
-    [SerializeField] private float destroyDelay = 0.5f; // Délai avant de détruire le zombie après la collision
-    [SerializeField] private GameObject vfxPrefab; // Prefab pour l'effet visuel de disparition
+    [Header("Paramètres de Collision")]
+    [SerializeField] private int pointsValue = 1; // Points à ajouter au score
+    [SerializeField] private float destroyDelay = 0.5f; // Délai avant destruction
+    [SerializeField] private int crashDamage = 20; // Dégâts infligés au véhicule quand on l'écrase
+
+    [Header("VFX")]
+    [SerializeField] private GameObject vfxPrefab; // VFX de disparition
+
+    private Health health; // Référence au composant Health
+
+    private void Start()
+    {
+        // Récupère le composant Health (doit être attaché au même GameObject)
+        health = GetComponent<Health>();
+    }
 
     private void OnTriggerEnter(Collider other)
     {
-        if (other.CompareTag("Player")) // Vérifier si le véhicule entre en collision avec le zombie
+        // Si le zombie touche le véhicule
+        if (other.CompareTag("Player"))
         {
-            ScoreManager scoreManager = FindObjectOfType<ScoreManager>(); // Trouver le ScoreManager dans la scène
-
-            if (scoreManager != null)
+            // 1. Infliger des dégâts au véhicule
+            VehicleHealth vehicleHealth = other.GetComponent<VehicleHealth>();
+            if (vehicleHealth != null)
             {
-                scoreManager.AddZombieScore(pointsValue); // Ajouter des points au score des zombies
+                vehicleHealth.TakeDamage(crashDamage);
             }
 
-            // Désactiver le zombie avec un délai
-            gameObject.SetActive(false); // Désactiver le zombie
-            InstantiateVFX(); // Appeler la méthode pour instancier le VFX
-            Invoke(nameof(DestroyZombie), destroyDelay); // Appel de la méthode pour détruire le zombie après un délai
+            // 2. Ajouter les points au score (puisqu'il a été tué)
+            ScoreManager scoreManager = FindObjectOfType<ScoreManager>();
+            if (scoreManager != null)
+            {
+                scoreManager.AddZombieScore(pointsValue);
+            }
+
+            // 3. Lancer la séquence de mort du zombie
+            gameObject.SetActive(false);
+            InstantiateVFX();
+            Invoke(nameof(DestroyZombie), destroyDelay);
         }
     }
 
@@ -28,14 +48,13 @@ public class Zombie : MonoBehaviour
     {
         if (vfxPrefab != null)
         {
-            // Instancier le prefab VFX à la position du zombie
             GameObject vfx = Instantiate(vfxPrefab, transform.position, Quaternion.identity);
-            Destroy(vfx, 2f); // Détruire le VFX après 2 secondes (ajustez selon vos besoins)
+            Destroy(vfx, 2f);
         }
     }
 
     private void DestroyZombie()
     {
-        Destroy(gameObject); // Détruire le zombie
+        Destroy(gameObject);
     }
 }

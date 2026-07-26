@@ -10,6 +10,8 @@ Material:
   m_Name: cfxr proc glow crisp ab
   m_Shader: {fileID: -6465566751694194690, guid: 67dfcda17071f4a41be79c4049965e67,
     type: 3}
+  m_Parent: {fileID: 0}
+  m_ModifiedSerializedProperties: 0
   m_ValidKeywords:
   - _CFXR_DITHERED_SHADOWS_ON
   - _FADING_ON
@@ -26,6 +28,7 @@ Material:
   m_CustomRenderQueue: -1
   stringTagMap: {}
   disabledShaderPasses: []
+  m_LockedProperties: 
   m_SavedProperties:
     serializedVersion: 3
     m_TexEnvs:
@@ -58,7 +61,7 @@ Material:
     - _ShadowStrength: 0.5
     - _SoftParticlesFadeDistanceFar: 1
     - _SoftParticlesFadeDistanceNear: 0
-    - _SrcBlend: 5
+    - _SrcBlend: 1
     - _SubGlowMax: 6.7
     - _SubGlowMin: -2.47
     - _UseDissolve: 0
@@ -68,3 +71,4 @@ Material:
     m_Colors:
     - _Color: {r: 1, g: 1, b: 1, a: 1}
   m_BuildTextureStacks: []
+  m_AllowLocking: 1

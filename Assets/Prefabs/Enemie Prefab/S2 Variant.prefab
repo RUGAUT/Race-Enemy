@@ -13,6 +13,11 @@ PrefabInstance:
       propertyPath: m_Name
       value: S2 Variant
       objectReference: {fileID: 0}
+    - target: {fileID: 6180422163818134239, guid: f4978608a44fbe64a8f771c0b43b5de4,
+        type: 3}
+      propertyPath: m_TagString
+      value: Enemy
+      objectReference: {fileID: 0}
     - target: {fileID: 6414301142582784766, guid: f4978608a44fbe64a8f771c0b43b5de4,
         type: 3}
       propertyPath: m_Constraints
@@ -96,6 +101,10 @@ PrefabInstance:
         type: 3}
       insertIndex: -1
       addedObject: {fileID: 1465264970785079441}
+    - targetCorrespondingSourceObject: {fileID: 6180422163818134239, guid: f4978608a44fbe64a8f771c0b43b5de4,
+        type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 6311645596716878013}
   m_SourcePrefab: {fileID: 100100000, guid: f4978608a44fbe64a8f771c0b43b5de4, type: 3}
 --- !u!1 &6795759086714969878 stripped
 GameObject:
@@ -118,4 +127,19 @@ MonoBehaviour:
   pointsValue: 1
   destroyDelay: 0.5
   vfxPrefab: {fileID: 6823200998282874702, guid: 8f8fe12323625f5499b2853dd2ad3e58,
+    type: 3}
+--- !u!114 &6311645596716878013
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6795759086714969878}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 891e1f33105bd984db1002fe17c73e49, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Health
+  maxHealth: 10
+  deathVFX: {fileID: 4957987105847337486, guid: 96edc86392bec7f4d9371e4425e7e300,
     type: 3}

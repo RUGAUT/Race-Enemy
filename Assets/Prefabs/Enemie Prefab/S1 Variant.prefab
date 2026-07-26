@@ -83,6 +83,11 @@ PrefabInstance:
       propertyPath: m_Name
       value: S1 Variant
       objectReference: {fileID: 0}
+    - target: {fileID: 807520817575441114, guid: 85812cb051453cb4eb28140e0c218334,
+        type: 3}
+      propertyPath: m_TagString
+      value: Enemy
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -91,6 +96,10 @@ PrefabInstance:
         type: 3}
       insertIndex: -1
       addedObject: {fileID: 2022297332409234581}
+    - targetCorrespondingSourceObject: {fileID: 807520817575441114, guid: 85812cb051453cb4eb28140e0c218334,
+        type: 3}
+      insertIndex: -1
+      addedObject: {fileID: -5872262431201341603}
   m_SourcePrefab: {fileID: 100100000, guid: 85812cb051453cb4eb28140e0c218334, type: 3}
 --- !u!1 &336833518144184999 stripped
 GameObject:
@@ -113,4 +122,19 @@ MonoBehaviour:
   pointsValue: 1
   destroyDelay: 0.5
   vfxPrefab: {fileID: 6823200998282874702, guid: 8f8fe12323625f5499b2853dd2ad3e58,
+    type: 3}
+--- !u!114 &-5872262431201341603
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 336833518144184999}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 891e1f33105bd984db1002fe17c73e49, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: '::'
+  maxHealth: 10
+  deathVFX: {fileID: 4957987105847337486, guid: 96edc86392bec7f4d9371e4425e7e300,
     type: 3}

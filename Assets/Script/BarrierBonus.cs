@@ -12,26 +12,19 @@ public class BarrierBonus : MonoBehaviour
             VehicleHealth vehicleHealth = other.GetComponent<VehicleHealth>();
             if (vehicleHealth != null)
             {
-                // Si déjà invulnérable, prolonge l'invulnérabilité ET réactive la barrière avec la durée TOTALE
-                if (vehicleHealth.IsInvulnerable())
+                // Essaie d'activer la barrière. 
+                // Ne fonctionne que si le joueur n'en a pas déjà une.
+                if (vehicleHealth.ActivateBarrier(duration))
                 {
-                    float remainingTime = vehicleHealth.GetRemainingInvincibilityTime();
-                    vehicleHealth.ExtendInvulnerability(duration);
-                    vehicleHealth.ActivateBarrier(remainingTime + duration); // Durée totale = restant + nouveau
-                }
-                else
-                {
-                    // Active l'invulnérabilité et la barrière avec la durée complète
-                    vehicleHealth.ActivateInvulnerability(duration);
-                    vehicleHealth.ActivateBarrier(duration);
-                }
+                    // L'activation a réussi : on joue le VFX et on détruit le bonus
+                    if (pickupEffect != null)
+                    {
+                        Instantiate(pickupEffect, transform.position, transform.rotation);
+                    }
 
-                if (pickupEffect != null)
-                {
-                    Instantiate(pickupEffect, transform.position, transform.rotation);
+                    Destroy(gameObject);
                 }
-
-                Destroy(gameObject);
+                // Si ActivateBarrier renvoie false, on ignore et le bonus reste sur la route !
             }
         }
     }
