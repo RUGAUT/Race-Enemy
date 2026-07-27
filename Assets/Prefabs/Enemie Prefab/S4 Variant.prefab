@@ -15,6 +15,31 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7059268428233645487, guid: 1d67583e964a59f43897ceb336b342b7,
         type: 3}
+      propertyPath: m_Height
+      value: 19.955757
+      objectReference: {fileID: 0}
+    - target: {fileID: 7059268428233645487, guid: 1d67583e964a59f43897ceb336b342b7,
+        type: 3}
+      propertyPath: m_Radius
+      value: 1.9605508
+      objectReference: {fileID: 0}
+    - target: {fileID: 7059268428233645487, guid: 1d67583e964a59f43897ceb336b342b7,
+        type: 3}
+      propertyPath: m_Center.x
+      value: 0.15704876
+      objectReference: {fileID: 0}
+    - target: {fileID: 7059268428233645487, guid: 1d67583e964a59f43897ceb336b342b7,
+        type: 3}
+      propertyPath: m_Center.y
+      value: 10.074663
+      objectReference: {fileID: 0}
+    - target: {fileID: 7059268428233645487, guid: 1d67583e964a59f43897ceb336b342b7,
+        type: 3}
+      propertyPath: m_Center.z
+      value: 0.329802
+      objectReference: {fileID: 0}
+    - target: {fileID: 7059268428233645487, guid: 1d67583e964a59f43897ceb336b342b7,
+        type: 3}
       propertyPath: m_IsTrigger
       value: 1
       objectReference: {fileID: 0}
@@ -51,22 +76,22 @@ PrefabInstance:
     - target: {fileID: 7385118641154199349, guid: 1d67583e964a59f43897ceb336b342b7,
         type: 3}
       propertyPath: m_LocalRotation.w
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 7385118641154199349, guid: 1d67583e964a59f43897ceb336b342b7,
         type: 3}
       propertyPath: m_LocalRotation.x
-      value: -0
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 7385118641154199349, guid: 1d67583e964a59f43897ceb336b342b7,
         type: 3}
       propertyPath: m_LocalRotation.y
-      value: -0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 7385118641154199349, guid: 1d67583e964a59f43897ceb336b342b7,
         type: 3}
       propertyPath: m_LocalRotation.z
-      value: -0
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 7385118641154199349, guid: 1d67583e964a59f43897ceb336b342b7,
         type: 3}
@@ -124,8 +149,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 66f4704d998adc14c9f581390872102f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  moveSpeed: 5
+  moveDirection: {x: 0, y: 0, z: -1}
+  lookDirection: {x: 0, y: 0, z: 0}
   pointsValue: 1
   destroyDelay: 0.5
+  crashDamage: 20
   vfxPrefab: {fileID: 6823200998282874702, guid: 8f8fe12323625f5499b2853dd2ad3e58,
     type: 3}
 --- !u!114 &-5364749232704022000
@@ -141,5 +170,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Health
   maxHealth: 10
+  pointsValue: 10
   deathVFX: {fileID: 4957987105847337486, guid: 96edc86392bec7f4d9371e4425e7e300,
     type: 3}

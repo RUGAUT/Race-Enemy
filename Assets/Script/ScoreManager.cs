@@ -5,13 +5,15 @@ public class ScoreManager : MonoBehaviour
 {
     public static ScoreManager Instance { get; private set; }
 
-    [SerializeField] private Transform vehicleTransform;
+    // J'ai retiré le [SerializeField] private Transform vehicleTransform; de l'Inspecteur
     [SerializeField] private TextMeshProUGUI distanceScoreText;
     [SerializeField] private TextMeshProUGUI zombieScoreText;
 
+    private Transform activeVehicle; // Référence dynamique au véhicule actif
     private float initialPositionZ;
     private float distanceScore;
     private int zombieScore;
+    private bool hasInitialized = false; // Pour enregistrer la position de départ une seule fois
 
     private void Awake()
     {
@@ -27,10 +29,6 @@ public class ScoreManager : MonoBehaviour
 
     private void Start()
     {
-        if (vehicleTransform != null)
-        {
-            initialPositionZ = vehicleTransform.position.z;
-        }
         distanceScore = 0;
         zombieScore = 0;
         UpdateScoreUI();
@@ -38,11 +36,35 @@ public class ScoreManager : MonoBehaviour
 
     private void Update()
     {
-        if (vehicleTransform != null)
+        // 1. Recherche automatique du véhicule s'il est absent ou désactivé
+        if (activeVehicle == null || !activeVehicle.gameObject.activeInHierarchy)
         {
-            float distanceTravelled = vehicleTransform.position.z - initialPositionZ;
-            distanceScore = Mathf.Max(0, distanceTravelled);
-            UpdateScoreUI();
+            FindActiveVehicle();
+        }
+
+        // 2. Si aucun véhicule n'est actif, on attend sagement
+        if (activeVehicle == null) return;
+
+        // 3. Enregistrement du point de départ au tout premier démarrage
+        if (!hasInitialized)
+        {
+            initialPositionZ = activeVehicle.position.z;
+            hasInitialized = true;
+        }
+
+        // 4. Calcul continu de la distance basée sur le véhicule actif
+        float distanceTravelled = activeVehicle.position.z - initialPositionZ;
+        distanceScore = Mathf.Max(0, distanceTravelled);
+        UpdateScoreUI();
+    }
+
+    // Fonction de recherche automatique via le Tag "Player"
+    private void FindActiveVehicle()
+    {
+        GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
+        if (playerObj != null)
+        {
+            activeVehicle = playerObj.transform;
         }
     }
 
@@ -65,7 +87,6 @@ public class ScoreManager : MonoBehaviour
         }
     }
 
-    // --- NOUVEAU : Fonctions pour transmettre les scores au GameManager ---
     public int GetFinalDistance()
     {
         return Mathf.FloorToInt(distanceScore);

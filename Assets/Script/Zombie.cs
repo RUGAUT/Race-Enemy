@@ -2,42 +2,73 @@ using UnityEngine;
 
 public class Zombie : MonoBehaviour
 {
+    [Header("Paramètres de Déplacement")]
+    [SerializeField] private float moveSpeed = 5f;
+
+    [Tooltip("Axe/Direction dans lequel le zombie SE DÉPLACE (espace monde)")]
+    [SerializeField] private Vector3 moveDirection = Vector3.back; // Ex: (0, 0, -1) pour -Z
+
+    [Tooltip("Axe/Direction dans lequel le zombie REGARDE (espace monde)")]
+    [SerializeField] private Vector3 lookDirection = Vector3.back; // Ex: (0, 0, -1) ou tout autre axe
+
     [Header("Paramètres de Collision")]
-    [SerializeField] private int pointsValue = 1; // Points à ajouter au score
-    [SerializeField] private float destroyDelay = 0.5f; // Délai avant destruction
-    [SerializeField] private int crashDamage = 20; // Dégâts infligés au véhicule quand on l'écrase
+    [SerializeField] private int pointsValue = 1;
+    [SerializeField] private float destroyDelay = 0.5f;
+    [SerializeField] private int crashDamage = 20;
 
     [Header("VFX")]
-    [SerializeField] private GameObject vfxPrefab; // VFX de disparition
+    [SerializeField] private GameObject vfxPrefab;
 
-    private Health health; // Référence au composant Health
+    private Health health;
 
     private void Start()
     {
-        // Récupère le composant Health (doit être attaché au même GameObject)
         health = GetComponent<Health>();
+
+        // Forcer la rotation au lancement du jeu
+        AlignLookRotation();
+    }
+
+    private void Update()
+    {
+        // Déplacement indépendant dans la direction 'moveDirection'
+        if (moveDirection != Vector3.zero)
+        {
+            transform.Translate(moveDirection.normalized * moveSpeed * Time.deltaTime, Space.World);
+        }
+    }
+
+    private void AlignLookRotation()
+    {
+        // Applique la rotation selon la direction 'lookDirection'
+        if (lookDirection != Vector3.zero)
+        {
+            transform.rotation = Quaternion.LookRotation(lookDirection.normalized);
+        }
+    }
+
+    // Permet de voir le résultat de 'lookDirection' en temps réel dans l'Éditeur Unity !
+    private void OnValidate()
+    {
+        AlignLookRotation();
     }
 
     private void OnTriggerEnter(Collider other)
     {
-        // Si le zombie touche le véhicule
         if (other.CompareTag("Player"))
         {
-            // 1. Infliger des dégâts au véhicule
             VehicleHealth vehicleHealth = other.GetComponent<VehicleHealth>();
             if (vehicleHealth != null)
             {
                 vehicleHealth.TakeDamage(crashDamage);
             }
 
-            // 2. Ajouter les points au score (puisqu'il a été tué)
             ScoreManager scoreManager = FindObjectOfType<ScoreManager>();
             if (scoreManager != null)
             {
                 scoreManager.AddZombieScore(pointsValue);
             }
 
-            // 3. Lancer la séquence de mort du zombie
             gameObject.SetActive(false);
             InstantiateVFX();
             Invoke(nameof(DestroyZombie), destroyDelay);

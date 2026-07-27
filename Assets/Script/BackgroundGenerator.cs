@@ -4,9 +4,11 @@ using UnityEngine;
 
 public class BackgroundGenerator : MonoBehaviour
 {
+    // NOUVEAU : Un menu pour choisir comment on veut inverser les décors
+    public enum InversionMode { None, MirrorScaleX, Rotate180Y }
+
     [SerializeField] private List<GameObject> backgroundPrefabs;
     [SerializeField] private int initialBackgroundCount = 5;
-    // J'ai retiré le Transform player fixe d'ici
 
     [SerializeField] private float backgroundLength = 30f;
     [SerializeField] private Vector3 spawnPosition = new Vector3(0f, 0f, 0f);
@@ -15,24 +17,25 @@ public class BackgroundGenerator : MonoBehaviour
     [SerializeField] private float backgroundLifetime = 5f;
     [SerializeField] private float minDistanceBetweenBackgrounds = 1f;
 
+    [Header("Anti-Répétition (Variations)")]
+    [Tooltip("Choisis comment inverser aléatoirement les décors pour éviter la répétition visuelle.")]
+    [SerializeField] private InversionMode inversionMode = InversionMode.MirrorScaleX;
+
     private float nextSpawnZ;
     private Queue<GameObject> activeBackgrounds = new Queue<GameObject>();
 
-    private Transform activePlayer; // Référence dynamique
-    private bool hasInitialized = false; // Sécurité pour le lancement initial
+    private Transform activePlayer;
+    private bool hasInitialized = false;
 
     void Update()
     {
-        // 1. Cherche le joueur actuel s'il est manquant ou désactivé
         if (activePlayer == null || !activePlayer.gameObject.activeInHierarchy)
         {
             FindActivePlayer();
         }
 
-        // 2. Met en pause si aucun véhicule n'est sur la scène
         if (activePlayer == null) return;
 
-        // 3. Premier lancement : ne s'exécute qu'une seule fois quand le premier véhicule est trouvé
         if (!hasInitialized)
         {
             nextSpawnZ = spawnPosition.z;
@@ -43,14 +46,12 @@ public class BackgroundGenerator : MonoBehaviour
             hasInitialized = true;
         }
 
-        // 4. Suit la progression du véhicule ACTIF
         if (activePlayer.position.z > nextSpawnZ - (initialBackgroundCount * backgroundLength))
         {
             SpawnBackground();
         }
     }
 
-    // Nouvelle fonction de recherche automatique
     private void FindActivePlayer()
     {
         GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
@@ -70,7 +71,28 @@ public class BackgroundGenerator : MonoBehaviour
         if (IsPositionValid(position))
         {
             GameObject backgroundPrefab = backgroundPrefabs[Random.Range(0, backgroundPrefabs.Count)];
-            GameObject background = Instantiate(backgroundPrefab, position, Quaternion.Euler(backgroundRotation));
+
+            // --- GESTION DE L'INVERSION ALÉATOIRE ---
+            Vector3 finalRotation = backgroundRotation;
+            bool shouldInvert = Random.value > 0.5f; // 50% de chance d'être inversé
+
+            // Si on a choisi de faire faire un demi-tour (Rotation Y)
+            if (shouldInvert && inversionMode == InversionMode.Rotate180Y)
+            {
+                finalRotation.y += 180f;
+            }
+
+            GameObject background = Instantiate(backgroundPrefab, position, Quaternion.Euler(finalRotation));
+
+            // Si on a choisi l'effet miroir (Scale X)
+            if (shouldInvert && inversionMode == InversionMode.MirrorScaleX)
+            {
+                Vector3 currentScale = background.transform.localScale;
+                currentScale.x *= -1f; // Inverse l'échelle sur l'axe X
+                background.transform.localScale = currentScale;
+            }
+            // ----------------------------------------
+
             activeBackgrounds.Enqueue(background);
 
             nextSpawnZ += backgroundLength;

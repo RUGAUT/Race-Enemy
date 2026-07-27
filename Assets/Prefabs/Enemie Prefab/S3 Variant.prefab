@@ -51,22 +51,22 @@ PrefabInstance:
     - target: {fileID: 4055793857937584781, guid: b73015aa4d1416c4290d8845faa7aa56,
         type: 3}
       propertyPath: m_LocalRotation.w
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4055793857937584781, guid: b73015aa4d1416c4290d8845faa7aa56,
         type: 3}
       propertyPath: m_LocalRotation.x
-      value: -0
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4055793857937584781, guid: b73015aa4d1416c4290d8845faa7aa56,
         type: 3}
       propertyPath: m_LocalRotation.y
-      value: -0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 4055793857937584781, guid: b73015aa4d1416c4290d8845faa7aa56,
         type: 3}
       propertyPath: m_LocalRotation.z
-      value: -0
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4055793857937584781, guid: b73015aa4d1416c4290d8845faa7aa56,
         type: 3}
@@ -87,6 +87,31 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Constraints
       value: 112
+      objectReference: {fileID: 0}
+    - target: {fileID: 4594703490247761943, guid: b73015aa4d1416c4290d8845faa7aa56,
+        type: 3}
+      propertyPath: m_Height
+      value: 19.751091
+      objectReference: {fileID: 0}
+    - target: {fileID: 4594703490247761943, guid: b73015aa4d1416c4290d8845faa7aa56,
+        type: 3}
+      propertyPath: m_Radius
+      value: 1.9605508
+      objectReference: {fileID: 0}
+    - target: {fileID: 4594703490247761943, guid: b73015aa4d1416c4290d8845faa7aa56,
+        type: 3}
+      propertyPath: m_Center.x
+      value: 0.15704888
+      objectReference: {fileID: 0}
+    - target: {fileID: 4594703490247761943, guid: b73015aa4d1416c4290d8845faa7aa56,
+        type: 3}
+      propertyPath: m_Center.y
+      value: 9.972328
+      objectReference: {fileID: 0}
+    - target: {fileID: 4594703490247761943, guid: b73015aa4d1416c4290d8845faa7aa56,
+        type: 3}
+      propertyPath: m_Center.z
+      value: 0.3298018
       objectReference: {fileID: 0}
     - target: {fileID: 4594703490247761943, guid: b73015aa4d1416c4290d8845faa7aa56,
         type: 3}
@@ -124,8 +149,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 66f4704d998adc14c9f581390872102f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  moveSpeed: 5
+  moveDirection: {x: 0, y: 0, z: -1}
+  lookDirection: {x: 0, y: 0, z: 0}
   pointsValue: 1
   destroyDelay: 0.5
+  crashDamage: 20
   vfxPrefab: {fileID: 6823200998282874702, guid: 8f8fe12323625f5499b2853dd2ad3e58,
     type: 3}
 --- !u!114 &-1648891580928855910
@@ -141,5 +170,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Health
   maxHealth: 10
+  pointsValue: 10
   deathVFX: {fileID: 4957987105847337486, guid: 96edc86392bec7f4d9371e4425e7e300,
     type: 3}
