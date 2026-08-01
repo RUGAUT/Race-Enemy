@@ -1,26 +1,44 @@
+using System;
 using UnityEngine;
 
+[DisallowMultipleComponent]
 public class Health : MonoBehaviour
 {
+    // Événements permettant de découpler l'UI de la logique de santé (Zéro allocation dans l'Update)
+    public event Action<int, int> OnHealthChanged;
+    public event Action OnDeath;
+
     [SerializeField] private int maxHealth = 100;
-
-    // NOUVEAU : Le nombre de points que rapporte cet ennemi quand il meurt
     [SerializeField] private int pointsValue = 10;
-
-    private int currentHealth;
 
     [Header("VFX")]
     [SerializeField] private GameObject deathVFX;
 
+    private int _currentHealth;
+
     private void Start()
     {
-        currentHealth = maxHealth;
+        Initialize(maxHealth);
+    }
+
+    /// <summary>
+    /// Permet d'écraser la vie maximale dynamiquement
+    /// </summary>
+    public void Initialize(int newMaxHealth)
+    {
+        maxHealth = newMaxHealth;
+        _currentHealth = maxHealth;
+        OnHealthChanged?.Invoke(_currentHealth, maxHealth);
     }
 
     public void TakeDamage(int damage)
     {
-        currentHealth -= damage;
-        if (currentHealth <= 0)
+        if (_currentHealth <= 0) return;
+
+        _currentHealth -= damage;
+        OnHealthChanged?.Invoke(_currentHealth, maxHealth);
+
+        if (_currentHealth <= 0)
         {
             Die();
         }
@@ -28,16 +46,22 @@ public class Health : MonoBehaviour
 
     private void Die()
     {
-        // NOUVEAU : On ajoute les points au score avant de détruire l'objet
-        if (ScoreManager.Instance != null)
+        OnDeath?.Invoke();
+
+        // FIX : Appel direct de la méthode (héritée de MonoBehaviour/Behaviour/Component/Object) 
+        // ou utilisation du namespace explicite UnityEngine.Object pour éviter le conflit avec System.Object.
+        var scoreManager = FindFirstObjectByType<ScoreManager>();
+
+        if (scoreManager != null)
         {
-            ScoreManager.Instance.AddZombieScore(pointsValue);
+            scoreManager.AddZombieScore(pointsValue);
         }
 
         if (deathVFX != null)
         {
             Instantiate(deathVFX, transform.position, Quaternion.identity);
         }
+
         Destroy(gameObject);
     }
 }

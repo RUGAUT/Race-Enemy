@@ -108,6 +108,16 @@ PrefabInstance:
       propertyPath: m_TagString
       value: Enemy
       objectReference: {fileID: 0}
+    - target: {fileID: 4578853093538967004, guid: 85812cb051453cb4eb28140e0c218334,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6417975181428428060, guid: 85812cb051453cb4eb28140e0c218334,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -145,7 +155,7 @@ MonoBehaviour:
   pointsValue: 1
   destroyDelay: 0.5
   crashDamage: 20
-  vfxPrefab: {fileID: 6823200998282874702, guid: 8f8fe12323625f5499b2853dd2ad3e58,
+  vfxPrefab: {fileID: 4957987105847337486, guid: 96edc86392bec7f4d9371e4425e7e300,
     type: 3}
 --- !u!114 &-5872262431201341603
 MonoBehaviour:
