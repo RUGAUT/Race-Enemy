@@ -7,11 +7,20 @@ public class Bullet : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        // Applique des dégâts si l'objet a un composant Health
+        // 1. Vérifie si c'est un ennemi standard
         Health health = other.GetComponent<Health>();
         if (health != null)
         {
             health.TakeDamage(damage);
+        }
+        else
+        {
+            // 2. Sinon, vérifie si c'est le Boss
+            BossHealth bossHealth = other.GetComponent<BossHealth>();
+            if (bossHealth != null)
+            {
+                bossHealth.TakeDamage(damage);
+            }
         }
 
         // Instancie le VFX d'impact (ex: explosion)

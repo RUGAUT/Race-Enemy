@@ -1,18 +1,14 @@
+using System.Collections;
 using System.Threading;
 using UnityEngine;
 
-/// <summary>
-/// Gestionnaire de zone asynchrone (Unity 6). 
-/// Instancie les vagues et le boss sur des ancres spatiales valides.
-/// </summary>
 [DisallowMultipleComponent]
 public class ZoneSpawnerManager : MonoBehaviour
 {
     [Header("Configuration des Spawns")]
-    [Tooltip("Liste de tous les prefabs de zombies standards")]
     [SerializeField] private GameObject[] standardZombiePrefabs;
-    [SerializeField] private GameObject bossPrefab;
-    [Tooltip("Points d'ancrage valides sur la carte (voies/hauteur)")]
+    [Tooltip("Liste de tous les boss à vaincre dans l'ordre (ou sélectionnés)")]
+    [SerializeField] private GameObject[] bossPrefabs; // --- MODIFIÉ : Tableau de boss ---
     [SerializeField] private Transform[] spawnPoints;
 
     [Header("Paramètres de Zone")]
@@ -21,46 +17,70 @@ public class ZoneSpawnerManager : MonoBehaviour
     [SerializeField] private float spawnDistance = 50f;
     [SerializeField] private Vector3 spawnAreaSize = new Vector3(10f, 2f, 50f);
 
+    [Header("Interface de Victoire")]
+    [SerializeField] private GameObject winPanel; // --- NOUVEAU : Panel Win à afficher à la fin ---
+
     [Header("Debug & Gizmos")]
     [SerializeField] private Color gizmoColor = Color.blue;
 
     private Transform _vehicleTransform;
+    private CarLaneController _carController;
     private CancellationTokenSource _cts;
+
+    private int currentBossIndex = 0; // Suit quel boss doit apparaître
 
     private void Start()
     {
-        // Résolution dynamique unique au démarrage (Zero GC en cours de partie)
         GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
         if (playerObj != null)
         {
             _vehicleTransform = playerObj.transform;
+            _carController = playerObj.GetComponent<CarLaneController>();
         }
         else
         {
-            Debug.LogError("[ZoneSpawnerManager] Véhicule introuvable ! Vérifiez le tag 'Player'.");
+            Debug.LogError("[ZoneSpawnerManager] Véhicule introuvable !");
             return;
         }
 
+        if (winPanel != null) winPanel.SetActive(false);
+
         _cts = new CancellationTokenSource();
-        _ = RunZoneSequenceAsync(_cts.Token);
+        _ = RunGameLoopAsync(_cts.Token);
     }
 
-    private async Awaitable RunZoneSequenceAsync(CancellationToken token)
+    /// <summary>
+    /// Boucle principale du jeu : Vagues de zombies -> Boss -> Répétition ou Victoire
+    /// </summary>
+    private async Awaitable RunGameLoopAsync(CancellationToken token)
     {
-        float timer = 0f;
-
-        while (timer < zoneDuration)
+        // Tant qu'il reste des boss à affronter
+        while (currentBossIndex < bossPrefabs.Length)
         {
-            if (token.IsCancellationRequested) return;
+            // --- ÉTAPE 1 : VAGUES DE ZOMBIES ---
+            float timer = 0f;
+            while (timer < zoneDuration)
+            {
+                if (token.IsCancellationRequested) return;
 
-            SpawnZombie();
+                SpawnZombie();
 
-            // Remplacement des Coroutines : allocation nulle sur le tas (Heap)
-            await Awaitable.WaitForSecondsAsync(spawnInterval, cancellationToken: token);
-            timer += spawnInterval;
+                await Awaitable.WaitForSecondsAsync(spawnInterval, cancellationToken: token);
+                timer += spawnInterval;
+            }
+
+            // --- ÉTAPE 2 : SPAWN ET COMBAT DU BOSS ACTUEL ---
+            // On attend que le boss actuel soit complètement vaincu avant de continuer
+            await SpawnAndFightBossRoutine(token, bossPrefabs[currentBossIndex]);
+
+            // Passe au boss suivant pour la prochaine boucle
+            currentBossIndex++;
+
+            // S'il reste encore un boss, la boucle continue et réactive les zombies
         }
 
-        SpawnBoss();
+        // --- ÉTAPE 3 : CONDITION DE VICTOIRE FINALE ---
+        TriggerWinCondition();
     }
 
     private void SpawnZombie()
@@ -79,11 +99,23 @@ public class ZoneSpawnerManager : MonoBehaviour
         Instantiate(selectedPrefab, spawnPosition, Quaternion.identity);
     }
 
-    private void SpawnBoss()
+    /// <summary>
+    /// Gère l'arrêt du véhicule, l'apparition du boss, et attend sa mort pour rendre la main
+    /// </summary>
+    private async Awaitable SpawnAndFightBossRoutine(CancellationToken token, GameObject bossPrefabToSpawn)
     {
-        if (bossPrefab == null || _vehicleTransform == null || spawnPoints.Length == 0) return;
+        if (bossPrefabToSpawn == null || _vehicleTransform == null || spawnPoints.Length == 0 || _carController == null) return;
 
-        // Positionnement sur la voie centrale (déterministe)
+        // 1. Freinage progressif du véhicule
+        _carController.isStoppedForBoss = true;
+
+        while (!_carController.IsFullyStopped)
+        {
+            if (token.IsCancellationRequested) return;
+            await Awaitable.NextFrameAsync(cancellationToken: token);
+        }
+
+        // 2. Instanciation du Boss actuel
         int centerIndex = spawnPoints.Length / 2;
         Transform referencePoint = spawnPoints[centerIndex];
 
@@ -93,9 +125,34 @@ public class ZoneSpawnerManager : MonoBehaviour
             _vehicleTransform.position.z + spawnDistance
         );
 
-        // Instanciation simple. Le BossZombieController est désormais autonome 
-        // et n'a plus besoin d'injection de dépendance pour suivre le joueur.
-        Instantiate(bossPrefab, bossSpawnPosition, Quaternion.identity);
+        GameObject spawnedBoss = Instantiate(bossPrefabToSpawn, bossSpawnPosition, Quaternion.identity);
+
+        // 3. Attente active de la mort du Boss
+        BossHealth bossHealth = spawnedBoss.GetComponent<BossHealth>();
+
+        // Si le boss a un script de vie, on attend qu'il soit détruit ou que sa vie tombe à 0
+        while (spawnedBoss != null)
+        {
+            if (token.IsCancellationRequested) return;
+            await Awaitable.NextFrameAsync(cancellationToken: token);
+        }
+
+        // 4. Le boss est vaincu : le véhicule se remet à avancer pour la prochaine zone de zombies
+        _carController.isStoppedForBoss = false;
+
+        // Petite pause de transition avant de relancer les zombies
+        await Awaitable.WaitForSecondsAsync(2f, cancellationToken: token);
+    }
+
+    private void TriggerWinCondition()
+    {
+        Debug.Log("Tous les boss ont été vaincus ! Victoire !");
+
+        if (winPanel != null)
+        {
+            winPanel.SetActive(true);
+            Time.timeScale = 0f; // Fige le jeu sur l'écran de victoire
+        }
     }
 
     private void OnDrawGizmos()

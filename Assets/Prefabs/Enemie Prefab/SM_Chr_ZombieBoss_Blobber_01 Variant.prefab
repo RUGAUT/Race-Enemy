@@ -502,6 +502,14 @@ PrefabInstance:
       propertyPath: m_Name
       value: SM_Chr_ZombieBoss_Blobber_01 Variant
       objectReference: {fileID: 0}
+    - target: {fileID: 1658146812600542, guid: 574d3bbe7d1c8684f9101c2b823c5770, type: 3}
+      propertyPath: m_Layer
+      value: 9
+      objectReference: {fileID: 0}
+    - target: {fileID: 1658146812600542, guid: 574d3bbe7d1c8684f9101c2b823c5770, type: 3}
+      propertyPath: m_TagString
+      value: Enemy
+      objectReference: {fileID: 0}
     - target: {fileID: 4826020429476580, guid: 574d3bbe7d1c8684f9101c2b823c5770, type: 3}
       propertyPath: m_LocalRotation.w
       value: -0.4255878
@@ -586,10 +594,6 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 1658146812600542, guid: 574d3bbe7d1c8684f9101c2b823c5770,
         type: 3}
       insertIndex: -1
-      addedObject: {fileID: 8596488353992569417}
-    - targetCorrespondingSourceObject: {fileID: 1658146812600542, guid: 574d3bbe7d1c8684f9101c2b823c5770,
-        type: 3}
-      insertIndex: -1
       addedObject: {fileID: 1548411464536763188}
     - targetCorrespondingSourceObject: {fileID: 1658146812600542, guid: 574d3bbe7d1c8684f9101c2b823c5770,
         type: 3}
@@ -598,7 +602,15 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 1658146812600542, guid: 574d3bbe7d1c8684f9101c2b823c5770,
         type: 3}
       insertIndex: -1
-      addedObject: {fileID: 5787963548019111907}
+      addedObject: {fileID: -3282571563877862894}
+    - targetCorrespondingSourceObject: {fileID: 1658146812600542, guid: 574d3bbe7d1c8684f9101c2b823c5770,
+        type: 3}
+      insertIndex: -1
+      addedObject: {fileID: -1494335141763270403}
+    - targetCorrespondingSourceObject: {fileID: 1658146812600542, guid: 574d3bbe7d1c8684f9101c2b823c5770,
+        type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 737544422991604413}
   m_SourcePrefab: {fileID: 100100000, guid: 574d3bbe7d1c8684f9101c2b823c5770, type: 3}
 --- !u!95 &3056179236784935115 stripped
 Animator:
@@ -618,68 +630,6 @@ GameObject:
     type: 3}
   m_PrefabInstance: {fileID: 3115119369010791091}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &8596488353992569417
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3116144170189972077}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1a98f058733e4ad4f918d7c43387bda5, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: '::'
-  animator: {fileID: 3056179236784935115}
-  bossMaxHealth: 500
-  healthBarSlider: {fileID: 589695402500236122}
-  healthBarFillImage: {fileID: 4542961603336617952}
-  healthColorGradient:
-    serializedVersion: 2
-    key0: {r: 1, g: 0, b: 0, a: 1}
-    key1: {r: 1, g: 0.90000004, b: 0, a: 1}
-    key2: {r: 0.013698518, g: 1, b: 0, a: 0}
-    key3: {r: 0, g: 0, b: 0, a: 0}
-    key4: {r: 0, g: 0, b: 0, a: 0}
-    key5: {r: 0, g: 0, b: 0, a: 0}
-    key6: {r: 0, g: 0, b: 0, a: 0}
-    key7: {r: 0, g: 0, b: 0, a: 0}
-    ctime0: 0
-    ctime1: 32151
-    ctime2: 65535
-    ctime3: 0
-    ctime4: 0
-    ctime5: 0
-    ctime6: 0
-    ctime7: 0
-    atime0: 0
-    atime1: 65535
-    atime2: 0
-    atime3: 0
-    atime4: 0
-    atime5: 0
-    atime6: 0
-    atime7: 0
-    m_Mode: 0
-    m_ColorSpace: 0
-    m_NumColorKeys: 3
-    m_NumAlphaKeys: 2
-  entrySpeed: 20
-  targetSpeed: 25
-  approachSpeed: 4
-  retreatSpeed: 16
-  entryWaitDuration: 3
-  timeBetweenAttacks: {x: 4, y: 8}
-  attackDuration: 1.5
-  retreatDuration: 2.5
-  moveDirection: {x: 0, y: 0, z: 1}
-  lookDirection: {x: 0, y: 0, z: -1}
-  attackDamage: 50
-  attackZoneExtents: {x: 3.19, y: 1.61, z: 3.07}
-  attackZoneZOffset: 2.07
-  playerLayerMask:
-    serializedVersion: 2
-    m_Bits: 8
 --- !u!65 &1548411464536763188
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -699,8 +649,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 1, y: 1.8297578, z: 1}
-  m_Center: {x: 0, y: 0.96279806, z: 0}
+  m_Size: {x: 1.281246, y: 2.283866, z: 1}
+  m_Center: {x: 0.0136086885, y: 0.7357446, z: 0}
 --- !u!54 &8962904533063604176
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -728,7 +678,7 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 116
   m_CollisionDetection: 0
---- !u!114 &5787963548019111907
+--- !u!114 &-3282571563877862894
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -737,10 +687,56 @@ MonoBehaviour:
   m_GameObject: {fileID: 3116144170189972077}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 891e1f33105bd984db1002fe17c73e49, type: 3}
+  m_Script: {fileID: 11500000, guid: 5bafd30ae9e5d3040ac2900007fca128, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Health
-  maxHealth: 200
-  pointsValue: 250
+  m_EditorClassIdentifier: '::'
+  animator: {fileID: 3056179236784935115}
+  lanePositions:
+  - -10
+  - -5
+  - 1
+  combatDistance: 36
+  walkSpeed: 5
+  screamDuration: 2
+  chargeSpeed: 20
+  returnSpeed: 10
+  distanceBehindPlayer: 40
+  obstaclePrefab: {fileID: 1435715068705156, guid: afdea58cf26534540841bb0e5947396b,
+    type: 3}
+  obstaclesToThrow: 3
+  timeBetweenThrows: 1
+  minionZombiePrefabs:
+  - {fileID: 168641379458560854, guid: e4d5c304c8dce7941a0482a292266c3a, type: 3}
+  - {fileID: 69562648628403455, guid: 6cd0eba302f763d43ad642feae14a4be, type: 3}
+  - {fileID: 69562648628403455, guid: fb6c2086b9fcd8c42aeaf01fb81c387d, type: 3}
+  zombiesToSpawnCount: 3
+  bossDamage: 50
+--- !u!114 &-1494335141763270403
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3116144170189972077}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e7605a3a33138ff4cb5fc92b036c5f93, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: '::'
+  maxHealth: 500
+  pointsValue: 500
   deathVFX: {fileID: 4957987105847337486, guid: 96edc86392bec7f4d9371e4425e7e300,
     type: 3}
+--- !u!114 &737544422991604413
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3116144170189972077}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e5ea4158b60b81f49ac0aab6910d66f3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: '::'
+  healthSlider: {fileID: 589695402500236122}

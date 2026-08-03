@@ -2,11 +2,17 @@ using UnityEngine;
 
 public class PlayerControls : MonoBehaviour
 {
+    [Header("Mouvement et Rotation")]
     [SerializeField] private int joystickID = 0; // ID du Virtual Joystick à utiliser
     [SerializeField] private float speed = 5f;
     [SerializeField] private float turnSpeed = 5f; // Vitesse de rotation pour pencher le véhicule
     [SerializeField] private float maxTurnAngle = 15f; // Angle maximum de rotation latérale
     [SerializeField] private float tiltAngle = 10f; // Angle de penchement sur l'axe Z
+
+    [Header("Vibration Moteur & Route")]
+    [SerializeField] private float vibrationSpeed = 35f; // Vitesse du tremblement
+    [Tooltip("Mets 0.5 dans X, Y ou Z pour trouver le bon sens de vibration")]
+    [SerializeField] private Vector3 vibrationAxes = new Vector3(0.5f, 0f, 0f);
 
     private float currentYAngle = 0f; // Rotation autour de l'axe Y
     private float currentZAngle = 0f; // Rotation autour de l'axe Z (penchement)
@@ -23,7 +29,7 @@ public class PlayerControls : MonoBehaviour
             return;
         }
 
-        // Récupère les entrées du joystick (méthode d'instance)
+        // Récupère les entrées du joystick
         Vector2 moveDirection = joystick.GetAxis();
 
         // --- Déplacement ---
@@ -64,7 +70,16 @@ public class PlayerControls : MonoBehaviour
             currentYAngle = Mathf.MoveTowards(currentYAngle, 0, turnSpeed * Time.deltaTime);
         }
 
-        // Applique la rotation combinée
-        transform.rotation = Quaternion.Euler(0, currentYAngle, currentZAngle);
+        // --- Calcul de la vibration ---
+        // On génère une valeur de base qui oscille entre -1 et 1
+        float rawVibration = Mathf.Sin(Time.time * vibrationSpeed);
+
+        // On multiplie cette valeur par les axes choisis dans l'inspecteur
+        float vibX = rawVibration * vibrationAxes.x;
+        float vibY = rawVibration * vibrationAxes.y;
+        float vibZ = rawVibration * vibrationAxes.z;
+
+        // Applique la rotation combinée avec la vibration personnalisée
+        transform.rotation = Quaternion.Euler(vibX, currentYAngle + vibY, currentZAngle + vibZ);
     }
 }

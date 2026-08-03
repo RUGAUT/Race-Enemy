@@ -1,18 +1,24 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using TMPro; // NOUVEAU : Requis pour les TextMeshPro dans l'interface Game Over
-using System.Collections; // NOUVEAU : Requis pour les Coroutines
+using TMPro;
+using System.Collections;
 
 public class GameManager : MonoBehaviour
 {
     [Header("UI Panels")]
     [SerializeField] private GameObject gameOverPanel;
+    [SerializeField] private GameObject winPanel; // Panel de victoire
     [SerializeField] private GameObject pauseMenuPanel;
 
     [Header("Game Over Score Animation")]
-    [SerializeField] private TextMeshProUGUI finalDistanceText; // Texte pour la distance finale
-    [SerializeField] private TextMeshProUGUI finalZombieText;   // Texte pour le score zombie final
-    [SerializeField] private float scoreAnimationDuration = 1.5f; // Durée de la montée des chiffres (en secondes)
+    [SerializeField] private TextMeshProUGUI finalDistanceText;
+    [SerializeField] private TextMeshProUGUI finalZombieText;
+
+    [Header("Win Score Animation")]
+    [SerializeField] private TextMeshProUGUI winFinalDistanceText; // Texte distance sur le panel Win
+    [SerializeField] private TextMeshProUGUI winFinalZombieText;   // Texte zombie sur le panel Win
+
+    [SerializeField] private float scoreAnimationDuration = 1.5f; // Durée de la montée des chiffres
 
     private bool isPaused = false;
     public static GameManager Instance { get; private set; }
@@ -29,6 +35,7 @@ public class GameManager : MonoBehaviour
         }
 
         if (gameOverPanel != null) gameOverPanel.SetActive(false);
+        if (winPanel != null) winPanel.SetActive(false); // Désactive le panel Win au démarrage
         if (pauseMenuPanel != null) pauseMenuPanel.SetActive(false);
     }
 
@@ -39,15 +46,26 @@ public class GameManager : MonoBehaviour
             gameOverPanel.SetActive(true);
             Time.timeScale = 0f; // Fige le jeu
 
-            // NOUVEAU : Lance l'animation des scores
-            StartCoroutine(AnimateScoreCounters());
+            // Lance l'animation des scores pour le Game Over
+            StartCoroutine(AnimateScoreCounters(finalDistanceText, finalZombieText));
         }
     }
 
-    // --- Coroutine d'animation des scores (façon Arcade) ---
-    private IEnumerator AnimateScoreCounters()
+    public void TriggerWin()
     {
-        // 1. Récupère les scores finaux depuis le ScoreManager
+        if (winPanel != null)
+        {
+            winPanel.SetActive(true);
+            Time.timeScale = 0f; // Fige le jeu
+
+            // Lance l'animation des scores pour la Victoire
+            StartCoroutine(AnimateScoreCounters(winFinalDistanceText, winFinalZombieText));
+        }
+    }
+
+    // --- Coroutine d'animation des scores réutilisable pour les deux panels ---
+    private IEnumerator AnimateScoreCounters(TextMeshProUGUI distText, TextMeshProUGUI zombText)
+    {
         int targetDistance = 0;
         int targetZombie = 0;
 
@@ -59,33 +77,26 @@ public class GameManager : MonoBehaviour
 
         float elapsedTime = 0f;
 
-        // 2. Fait monter les chiffres progressivement
         while (elapsedTime < scoreAnimationDuration)
         {
-            // On utilise unscaledDeltaTime car timeScale est à 0 !
+            // Utilise unscaledDeltaTime car timeScale est à 0 !
             elapsedTime += Time.unscaledDeltaTime;
 
-            // Calcul de la progression (de 0 à 1)
             float progress = elapsedTime / scoreAnimationDuration;
-
-            // Effet "Ease-Out" (ralentit à la fin) pour un rendu plus stylé
             float easeOutProgress = 1f - Mathf.Pow(1f - progress, 3);
 
-            // Interpolation des valeurs
             int currentDistance = Mathf.RoundToInt(Mathf.Lerp(0, targetDistance, easeOutProgress));
             int currentZombie = Mathf.RoundToInt(Mathf.Lerp(0, targetZombie, easeOutProgress));
 
-            // Mise à jour de l'UI
-            if (finalDistanceText != null) finalDistanceText.text = "Distance: " + currentDistance + "m";
-            if (finalZombieText != null) finalZombieText.text = "Zombies Tués: " + currentZombie;
+            if (distText != null) distText.text = "Distance: " + currentDistance + "m";
+            if (zombText != null) zombText.text = "Zombies Tués: " + currentZombie;
 
-            // Attend la frame suivante en temps réel
             yield return null;
         }
 
-        // 3. Sécurité : S'assure qu'à la fin de l'animation, on affiche exactement le bon score final
-        if (finalDistanceText != null) finalDistanceText.text = "Distance: " + targetDistance + "m";
-        if (finalZombieText != null) finalZombieText.text = "Zombies Tués: " + targetZombie;
+        // Sécurité : affiche le score final exact à la fin
+        if (distText != null) distText.text = "Distance: " + targetDistance + "m";
+        if (zombText != null) zombText.text = "Zombies Tués: " + targetZombie;
     }
 
     public void OnRestartButtonClick()
