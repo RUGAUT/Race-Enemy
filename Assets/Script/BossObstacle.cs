@@ -8,6 +8,11 @@ public class BossObstacle : MonoBehaviour
     [SerializeField] private int damage = 20;
     [SerializeField] private float lifeTime = 5f;
 
+    [Header("VFX & Impact")]
+    [SerializeField] private GameObject impactVFX; // Le VFX à instancier (poussière, explosion...)
+    [Tooltip("Le Tag de l'objet qui sert de route/sol")]
+    [SerializeField] private string roadTag = "Road";
+
     private float targetLaneX; // La voie cible où l'obstacle doit arriver
 
     public void Initialize(float targetX)
@@ -32,12 +37,29 @@ public class BossObstacle : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
+        // Si l'obstacle touche le joueur
         if (other.CompareTag("Player"))
         {
             VehicleHealth vehicleHealth = other.GetComponent<VehicleHealth>();
             if (vehicleHealth != null)
             {
                 vehicleHealth.TakeDamage(damage);
+            }
+
+            // Optionnel : Jouer aussi le VFX si ça percute la voiture
+            if (impactVFX != null)
+            {
+                Instantiate(impactVFX, transform.position, Quaternion.identity);
+            }
+
+            Destroy(gameObject);
+        }
+        // Si l'obstacle touche la route / le sol
+        else if (other.CompareTag(roadTag))
+        {
+            if (impactVFX != null)
+            {
+                Instantiate(impactVFX, transform.position, Quaternion.identity);
             }
 
             Destroy(gameObject);

@@ -105,9 +105,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7494e1ca8b172a4479210b6e8855abba, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BossObstacle
-  moveSpeed: 40
+  forwardSpeed: 40
+  slideSpeed: 10
   damage: 20
   lifeTime: 5
+  impactVFX: {fileID: 8899141511347303536, guid: 5e5f1450d5cba5c4ba52805245d90710,
+    type: 3}
+  roadTag: Route
 --- !u!54 &1974007574436612503
 Rigidbody:
   m_ObjectHideFlags: 0

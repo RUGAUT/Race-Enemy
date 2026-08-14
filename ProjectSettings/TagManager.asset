@@ -9,6 +9,7 @@ TagManager:
   - Obstacle
   - Enemy
   - Bullet
+  - Route
   layers:
   - Default
   - TransparentFX
