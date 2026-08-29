@@ -48,6 +48,11 @@ PrefabInstance:
       propertyPath: m_IsTrigger
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: -8047270184346250842, guid: 8ad2040e85c6dd545ad89e436ed1c134,
+        type: 3}
+      propertyPath: m_ExcludeLayers.m_Bits
+      value: 328
+      objectReference: {fileID: 0}
     - target: {fileID: -3132284684374043937, guid: 8ad2040e85c6dd545ad89e436ed1c134,
         type: 3}
       propertyPath: m_Constraints

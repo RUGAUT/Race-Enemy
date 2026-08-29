@@ -105,7 +105,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7494e1ca8b172a4479210b6e8855abba, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BossObstacle
-  forwardSpeed: 40
+  forwardSpeed: 50
   slideSpeed: 10
   damage: 20
   lifeTime: 5

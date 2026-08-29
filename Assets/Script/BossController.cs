@@ -9,7 +9,6 @@ public class BossController : MonoBehaviour
     private CameraFollow cameraFollow;
 
     [Header("Patterns Actifs")]
-    [Tooltip("Coche ou décoche pour activer les attaques spécifiques à ce Boss")]
     [SerializeField] private bool enablePattern1_Charge = true;
     [SerializeField] private bool enablePattern2_Throw = true;
     [SerializeField] private bool enablePattern3_Zombies = true;
@@ -43,19 +42,28 @@ public class BossController : MonoBehaviour
 
     [Header("Pattern 4 (Saut Écrasant)")]
     [SerializeField] private float jumpHeight = 25f;
-    [SerializeField] private float jumpUpSpeed = 40f;
+    [SerializeField] private float jumpUpDuration = 0.6f;
+
+    // --- NOUVEAU : Paramètres pour le tremblement au décollage ---
+    [SerializeField] private float takeoffShakeDuration = 0.4f;
+    [SerializeField] private float takeoffShakeMagnitude = 0.4f;
+
     [SerializeField] private float fallDownSpeed = 80f;
     [SerializeField] private float hangTime = 1f;
     [SerializeField] private float landingShakeDuration = 0.8f;
     [SerializeField] private float landingShakeMagnitude = 0.6f;
     [SerializeField] private GameObject landingVFX;
+    [Tooltip("Le VFX qui indique où le boss va tomber (ex: un cercle rouge)")]
+    [SerializeField] private GameObject warningIndicatorPrefab;
+    [SerializeField] private float timeOnGround = 1.5f;
+    [SerializeField] private float standUpDuration = 1.5f;
 
     [Header("Dégâts du Boss (Contact)")]
     [SerializeField] private int bossDamage = 50;
 
     private Transform player;
     private bool isAttacking = false;
-    private bool readyToJump = false; // Bloque le saut jusqu'à l'Animation Event
+    private bool readyToJump = false;
 
     private void Start()
     {
@@ -114,10 +122,6 @@ public class BossController : MonoBehaviour
                 {
                     yield return StartCoroutine(Pattern4_JumpAndSmash());
                 }
-            }
-            else
-            {
-                Debug.LogWarning("Aucun pattern n'est activé sur ce Boss !");
             }
 
             yield return new WaitForSeconds(1.5f);
@@ -245,37 +249,87 @@ public class BossController : MonoBehaviour
         readyToJump = false;
         animator.SetTrigger("Jump");
 
+        // Attend que l'Animation Event autorise le décollage
         while (!readyToJump)
         {
             yield return null;
         }
 
-        Vector3 peakPosition = new Vector3(transform.position.x, originalY + jumpHeight, transform.position.z);
-        while (transform.position.y < peakPosition.y - 0.1f)
-        {
-            transform.position = Vector3.MoveTowards(transform.position, peakPosition, jumpUpSpeed * Time.deltaTime);
-            yield return null;
-        }
+        // --- NOUVEAU : Tremblement au moment précis où le boss décolle ---
+        if (cameraFollow != null) cameraFollow.TriggerShake(takeoffShakeDuration, takeoffShakeMagnitude);
 
+        Vector3 startPos = transform.position;
         float targetX = lanePositions[Random.Range(0, lanePositions.Length)];
-        Vector3 hoverPosition = new Vector3(targetX, peakPosition.y, player.position.z + 2f);
-        transform.position = hoverPosition;
 
-        yield return new WaitForSeconds(hangTime);
-
-        Vector3 landingPosition = new Vector3(targetX, originalY, player.position.z + 2f);
-        while (transform.position.y > landingPosition.y + 0.1f)
+        GameObject warningCircle = null;
+        if (warningIndicatorPrefab != null)
         {
-            transform.position = Vector3.MoveTowards(transform.position, landingPosition, fallDownSpeed * Time.deltaTime);
+            warningCircle = Instantiate(warningIndicatorPrefab, new Vector3(targetX, originalY + 0.1f, player.position.z + 2f), Quaternion.Euler(90f, 0f, 0f));
+        }
+
+        // 1. MONTÉE
+        float t = 0f;
+        while (t < 1f)
+        {
+            t += Time.deltaTime / jumpUpDuration;
+            float progress = Mathf.Clamp01(t);
+
+            float currentX = Mathf.Lerp(startPos.x, targetX, progress);
+            float currentZ = Mathf.Lerp(startPos.z, player.position.z + 2f, progress);
+            float currentY = Mathf.Lerp(startPos.y, originalY + jumpHeight, Mathf.Sin(progress * Mathf.PI / 2f));
+
+            transform.position = new Vector3(currentX, currentY, currentZ);
+            transform.LookAt(new Vector3(player.position.x, originalY, player.position.z));
+
+            if (warningCircle != null) warningCircle.transform.position = new Vector3(targetX, originalY + 0.1f, player.position.z + 2f);
+
             yield return null;
         }
-        transform.position = landingPosition;
 
+        // 2. TEMPS DE SUSPENS EN L'AIR
+        float hangTimer = 0f;
+        while (hangTimer < hangTime)
+        {
+            hangTimer += Time.deltaTime;
+
+            transform.position = new Vector3(targetX, originalY + jumpHeight, player.position.z + 2f);
+            transform.LookAt(new Vector3(player.position.x, originalY, player.position.z));
+
+            if (warningCircle != null) warningCircle.transform.position = new Vector3(targetX, originalY + 0.1f, player.position.z + 2f);
+
+            yield return null;
+        }
+
+        // 3. CHUTE VIOLENTE
+        while (transform.position.y > originalY + 0.1f)
+        {
+            Vector3 landingPosition = new Vector3(targetX, originalY, player.position.z + 2f);
+            transform.position = Vector3.MoveTowards(transform.position, landingPosition, fallDownSpeed * Time.deltaTime);
+            transform.LookAt(new Vector3(player.position.x, originalY, player.position.z));
+
+            if (warningCircle != null) warningCircle.transform.position = new Vector3(targetX, originalY + 0.1f, player.position.z + 2f);
+
+            yield return null;
+        }
+
+        if (warningCircle != null) Destroy(warningCircle);
+
+        transform.position = new Vector3(targetX, originalY, player.position.z + 2f);
+
+        // Impact au sol
         animator.SetTrigger("Land");
+        transform.LookAt(new Vector3(player.position.x, originalY, player.position.z));
+
+        // Tremblement de l'atterrissage
         if (cameraFollow != null) cameraFollow.TriggerShake(landingShakeDuration, landingShakeMagnitude);
+
         if (landingVFX != null) Instantiate(landingVFX, transform.position, Quaternion.identity);
 
-        yield return new WaitForSeconds(1.5f);
+        yield return new WaitForSeconds(timeOnGround);
+
+        transform.LookAt(new Vector3(player.position.x, originalY, player.position.z));
+        animator.SetTrigger("StandUp");
+        yield return new WaitForSeconds(standUpDuration);
 
         animator.SetBool("IsRunning", true);
         float returnTargetX = lanePositions[1];

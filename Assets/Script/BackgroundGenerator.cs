@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class BackgroundGenerator : MonoBehaviour
 {
-    // NOUVEAU : Un menu pour choisir comment on veut inverser les décors
+    // Un menu pour choisir comment on veut inverser les décors
     public enum InversionMode { None, MirrorScaleX, Rotate180Y }
 
     [SerializeField] private List<GameObject> backgroundPrefabs;
@@ -14,7 +14,11 @@ public class BackgroundGenerator : MonoBehaviour
     [SerializeField] private Vector3 spawnPosition = new Vector3(0f, 0f, 0f);
     [SerializeField] private Vector3 spawnSize = new Vector3(10f, 0f, 30f);
     [SerializeField] private Vector3 backgroundRotation = Vector3.zero;
-    [SerializeField] private float backgroundLifetime = 5f;
+
+    // --- NOUVEAU : On remplace le "Time" par la "Distance" ---
+    [Tooltip("Distance derrière le véhicule avant de détruire le décor (ex: 40)")]
+    [SerializeField] private float destroyDistanceBehindPlayer = 40f;
+
     [SerializeField] private float minDistanceBetweenBackgrounds = 1f;
 
     [Header("Anti-Répétition (Variations)")]
@@ -36,6 +40,7 @@ public class BackgroundGenerator : MonoBehaviour
 
         if (activePlayer == null) return;
 
+        // 1. Initialisation de départ
         if (!hasInitialized)
         {
             nextSpawnZ = spawnPosition.z;
@@ -46,9 +51,29 @@ public class BackgroundGenerator : MonoBehaviour
             hasInitialized = true;
         }
 
+        // 2. Apparition de nouveaux décors devant la voiture
         if (activePlayer.position.z > nextSpawnZ - (initialBackgroundCount * backgroundLength))
         {
             SpawnBackground();
+        }
+
+        // --- NOUVEAU : 3. Destruction basée sur la POSITION au lieu du temps ---
+        if (activeBackgrounds.Count > 0)
+        {
+            // Regarde le décor le plus ancien (le plus loin derrière)
+            GameObject oldestBackground = activeBackgrounds.Peek();
+
+            // Si le décor est détruit pour une autre raison, on nettoie la liste
+            if (oldestBackground == null)
+            {
+                activeBackgrounds.Dequeue();
+            }
+            // Si le joueur a dépassé le décor de X mètres, on le détruit
+            else if (activePlayer.position.z > oldestBackground.transform.position.z + destroyDistanceBehindPlayer)
+            {
+                activeBackgrounds.Dequeue();
+                Destroy(oldestBackground);
+            }
         }
     }
 
@@ -94,14 +119,11 @@ public class BackgroundGenerator : MonoBehaviour
             // ----------------------------------------
 
             activeBackgrounds.Enqueue(background);
-
             nextSpawnZ += backgroundLength;
-
-            StartCoroutine(DestroyBackgroundAfterTime(background, backgroundLifetime));
         }
         else
         {
-            SpawnBackground();
+            SpawnBackground(); // Réessaye si la position n'est pas valide
         }
     }
 
@@ -109,19 +131,12 @@ public class BackgroundGenerator : MonoBehaviour
     {
         foreach (GameObject background in activeBackgrounds)
         {
-            if (Vector3.Distance(background.transform.position, position) < minDistanceBetweenBackgrounds)
+            if (background != null && Vector3.Distance(background.transform.position, position) < minDistanceBetweenBackgrounds)
             {
                 return false;
             }
         }
         return true;
-    }
-
-    private IEnumerator DestroyBackgroundAfterTime(GameObject background, float lifetime)
-    {
-        yield return new WaitForSeconds(lifetime);
-        activeBackgrounds.Dequeue();
-        Destroy(background);
     }
 
     private void OnDrawGizmos()

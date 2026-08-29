@@ -12,9 +12,9 @@ GameObject:
   - component: {fileID: 6522946453497855780}
   - component: {fileID: -3132284684374043937}
   - component: {fileID: -8047270184346250842}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: SM_Bullet_01
-  m_TagString: Untagged
+  m_TagString: Bullet
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -89,7 +89,7 @@ BoxCollider:
     m_Bits: 0
   m_ExcludeLayers:
     serializedVersion: 2
-    m_Bits: 0
+    m_Bits: 328
   m_LayerOverridePriority: 0
   m_IsTrigger: 0
   m_ProvidesContacts: 0
@@ -108,7 +108,7 @@ GameObject:
   - component: {fileID: 6965400757647036215}
   - component: {fileID: 4392282984883386750}
   - component: {fileID: 5401504316433248656}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: SM_Bullet_01
   m_TagString: Untagged
   m_Icon: {fileID: 0}

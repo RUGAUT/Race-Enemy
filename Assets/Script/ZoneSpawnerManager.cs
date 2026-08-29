@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Threading;
 using UnityEngine;
+using UnityEngine.UI;
 
 [DisallowMultipleComponent]
 public class ZoneSpawnerManager : MonoBehaviour
@@ -8,7 +9,7 @@ public class ZoneSpawnerManager : MonoBehaviour
     [Header("Configuration des Spawns")]
     [SerializeField] private GameObject[] standardZombiePrefabs;
     [Tooltip("Liste de tous les boss à vaincre dans l'ordre (ou sélectionnés)")]
-    [SerializeField] private GameObject[] bossPrefabs; // --- MODIFIÉ : Tableau de boss ---
+    [SerializeField] private GameObject[] bossPrefabs;
     [SerializeField] private Transform[] spawnPoints;
 
     [Header("Paramètres de Zone")]
@@ -17,8 +18,9 @@ public class ZoneSpawnerManager : MonoBehaviour
     [SerializeField] private float spawnDistance = 50f;
     [SerializeField] private Vector3 spawnAreaSize = new Vector3(10f, 2f, 50f);
 
-    [Header("Interface de Victoire")]
-    [SerializeField] private GameObject winPanel; // --- NOUVEAU : Panel Win à afficher à la fin ---
+    [Header("Interface")]
+    [Tooltip("Le Slider UI qui indique la progression avant l'arrivée du Boss")]
+    [SerializeField] private Slider zoneDurationSlider;
 
     [Header("Debug & Gizmos")]
     [SerializeField] private Color gizmoColor = Color.blue;
@@ -27,7 +29,7 @@ public class ZoneSpawnerManager : MonoBehaviour
     private CarLaneController _carController;
     private CancellationTokenSource _cts;
 
-    private int currentBossIndex = 0; // Suit quel boss doit apparaître
+    private int currentBossIndex = 0;
 
     private void Start()
     {
@@ -43,43 +45,61 @@ public class ZoneSpawnerManager : MonoBehaviour
             return;
         }
 
-        if (winPanel != null) winPanel.SetActive(false);
+        if (zoneDurationSlider != null) zoneDurationSlider.gameObject.SetActive(false);
 
         _cts = new CancellationTokenSource();
         _ = RunGameLoopAsync(_cts.Token);
     }
 
-    /// <summary>
-    /// Boucle principale du jeu : Vagues de zombies -> Boss -> Répétition ou Victoire
-    /// </summary>
     private async Awaitable RunGameLoopAsync(CancellationToken token)
     {
-        // Tant qu'il reste des boss à affronter
         while (currentBossIndex < bossPrefabs.Length)
         {
-            // --- ÉTAPE 1 : VAGUES DE ZOMBIES ---
             float timer = 0f;
+            float nextSpawnTime = 0f;
+
+            if (zoneDurationSlider != null)
+            {
+                zoneDurationSlider.gameObject.SetActive(true);
+                zoneDurationSlider.maxValue = zoneDuration;
+                zoneDurationSlider.value = 0f;
+            }
+
             while (timer < zoneDuration)
             {
                 if (token.IsCancellationRequested) return;
 
-                SpawnZombie();
+                if (timer >= nextSpawnTime)
+                {
+                    SpawnZombie();
+                    nextSpawnTime += spawnInterval;
+                }
 
-                await Awaitable.WaitForSecondsAsync(spawnInterval, cancellationToken: token);
-                timer += spawnInterval;
+                timer += Time.deltaTime;
+
+                if (zoneDurationSlider != null)
+                {
+                    zoneDurationSlider.value = timer;
+                }
+
+                await Awaitable.NextFrameAsync(cancellationToken: token);
             }
 
-            // --- ÉTAPE 2 : SPAWN ET COMBAT DU BOSS ACTUEL ---
-            // On attend que le boss actuel soit complètement vaincu avant de continuer
+            if (zoneDurationSlider != null)
+            {
+                zoneDurationSlider.value = zoneDuration;
+            }
+
             await SpawnAndFightBossRoutine(token, bossPrefabs[currentBossIndex]);
 
-            // Passe au boss suivant pour la prochaine boucle
             currentBossIndex++;
-
-            // S'il reste encore un boss, la boucle continue et réactive les zombies
         }
 
-        // --- ÉTAPE 3 : CONDITION DE VICTOIRE FINALE ---
+        if (zoneDurationSlider != null)
+        {
+            zoneDurationSlider.gameObject.SetActive(false);
+        }
+
         TriggerWinCondition();
     }
 
@@ -99,14 +119,10 @@ public class ZoneSpawnerManager : MonoBehaviour
         Instantiate(selectedPrefab, spawnPosition, Quaternion.identity);
     }
 
-    /// <summary>
-    /// Gère l'arrêt du véhicule, l'apparition du boss, et attend sa mort pour rendre la main
-    /// </summary>
     private async Awaitable SpawnAndFightBossRoutine(CancellationToken token, GameObject bossPrefabToSpawn)
     {
         if (bossPrefabToSpawn == null || _vehicleTransform == null || spawnPoints.Length == 0 || _carController == null) return;
 
-        // 1. Freinage progressif du véhicule
         _carController.isStoppedForBoss = true;
 
         while (!_carController.IsFullyStopped)
@@ -115,7 +131,6 @@ public class ZoneSpawnerManager : MonoBehaviour
             await Awaitable.NextFrameAsync(cancellationToken: token);
         }
 
-        // 2. Instanciation du Boss actuel
         int centerIndex = spawnPoints.Length / 2;
         Transform referencePoint = spawnPoints[centerIndex];
 
@@ -127,20 +142,16 @@ public class ZoneSpawnerManager : MonoBehaviour
 
         GameObject spawnedBoss = Instantiate(bossPrefabToSpawn, bossSpawnPosition, Quaternion.identity);
 
-        // 3. Attente active de la mort du Boss
         BossHealth bossHealth = spawnedBoss.GetComponent<BossHealth>();
 
-        // Si le boss a un script de vie, on attend qu'il soit détruit ou que sa vie tombe à 0
         while (spawnedBoss != null)
         {
             if (token.IsCancellationRequested) return;
             await Awaitable.NextFrameAsync(cancellationToken: token);
         }
 
-        // 4. Le boss est vaincu : le véhicule se remet à avancer pour la prochaine zone de zombies
         _carController.isStoppedForBoss = false;
 
-        // Petite pause de transition avant de relancer les zombies
         await Awaitable.WaitForSecondsAsync(2f, cancellationToken: token);
     }
 
@@ -148,10 +159,14 @@ public class ZoneSpawnerManager : MonoBehaviour
     {
         Debug.Log("Tous les boss ont été vaincus ! Victoire !");
 
-        if (winPanel != null)
+        // C'est ici que la magie opère : on passe le relais au GameManager !
+        if (GameManager.Instance != null)
         {
-            winPanel.SetActive(true);
-            Time.timeScale = 0f; // Fige le jeu sur l'écran de victoire
+            GameManager.Instance.TriggerWin();
+        }
+        else
+        {
+            Debug.LogWarning("Aucun GameManager trouvé dans la scène !");
         }
     }
 
