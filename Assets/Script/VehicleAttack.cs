@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Collections;
 using UnityEngine.UI; // --- NOUVEAU : Requis pour interagir avec l'UI ---
+using UnityEngine.SceneManagement; // --- NOUVEAU : Requis pour remettre le tir triple à zéro au Restart ---
 
 public class VehicleAttack : MonoBehaviour
 {
@@ -45,9 +46,43 @@ public class VehicleAttack : MonoBehaviour
     [Tooltip("Opacité du bouton pendant le cooldown (0 = invisible, 1 = opaque)")]
     [SerializeField] private float cooldownAlpha = 0.4f;
 
+    // --- NOUVEAU : Tir Triple (Power-up) ---
+    [Header("=== Tir Triple (Power-up) ===")]
+    [Tooltip("Angle d'écart des balles latérales par rapport à la balle centrale")]
+    [SerializeField] private float tripleShotSpreadAngle = 15f;
+    [Tooltip("Optionnel : Image UI en mode Filled qui se vide avec le temps restant")]
+    [SerializeField] private Image tripleShotTimerImage;
+
+    // "static" = partagé entre TOUS les véhicules (le bonus continue si on change de véhicule)
+    private static float tripleShotEndTime = 0f;
+    private static float tripleShotDuration = 1f;
+
+    public static bool IsTripleShotActive => Time.time < tripleShotEndTime;
+
     private float nextFireTime = 0f;
     private float nextGrenadeTime = 0f;
     private Coroutine autoFireCoroutine;
+
+    // --- NOUVEAU : remet le tir triple à zéro à chaque chargement de scène ---
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    private static void InitStatics()
+    {
+        tripleShotEndTime = 0f;
+        SceneManager.sceneLoaded -= OnSceneLoaded;
+        SceneManager.sceneLoaded += OnSceneLoaded;
+    }
+
+    private static void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+    {
+        tripleShotEndTime = 0f;
+    }
+
+    // --- NOUVEAU : appelée par TripleShotPickup ---
+    public static void ActivateTripleShot(float duration)
+    {
+        tripleShotDuration = Mathf.Max(0.01f, duration);
+        tripleShotEndTime = Time.time + duration;
+    }
 
     private void Start()
     {
@@ -64,6 +99,12 @@ public class VehicleAttack : MonoBehaviour
     private void OnDisable()
     {
         if (autoFireCoroutine != null) StopCoroutine(autoFireCoroutine);
+    }
+
+    // --- NOUVEAU : met à jour le timer UI du tir triple ---
+    private void Update()
+    {
+        UpdateTripleShotUI();
     }
 
     private IEnumerator AutoFire()
@@ -101,9 +142,18 @@ public class VehicleAttack : MonoBehaviour
 
     private void ShootBullet(Transform firePoint, Transform vfxPoint, Quaternion rotation)
     {
+        // --- Balle centrale : EXACTEMENT ton code d'origine ---
         GameObject bullet = Instantiate(bulletPrefab, firePoint.position, firePoint.rotation * rotation);
         Rigidbody rb = bullet.GetComponent<Rigidbody>();
         if (rb != null) rb.linearVelocity = firePoint.TransformDirection(bulletDirection) * bulletSpeed;
+
+        // --- NOUVEAU : 2 balles latérales si le tir triple est actif ---
+        // Même calcul que la balle centrale (même vitesse), simplement pivoté à gauche et à droite.
+        if (IsTripleShotActive)
+        {
+            ShootSideBullet(firePoint, rotation, -tripleShotSpreadAngle);
+            ShootSideBullet(firePoint, rotation, tripleShotSpreadAngle);
+        }
 
         if (muzzleFlashVFX != null)
         {
@@ -112,6 +162,16 @@ public class VehicleAttack : MonoBehaviour
             vfx.transform.localScale = muzzleFlashScale;
             Destroy(vfx, vfxLifetime);
         }
+    }
+
+    // --- NOUVEAU : copie de ta balle, pivotée autour de l'axe vertical ---
+    private void ShootSideBullet(Transform firePoint, Quaternion rotation, float angle)
+    {
+        Quaternion turn = Quaternion.AngleAxis(angle, Vector3.up);
+
+        GameObject bullet = Instantiate(bulletPrefab, firePoint.position, turn * (firePoint.rotation * rotation));
+        Rigidbody rb = bullet.GetComponent<Rigidbody>();
+        if (rb != null) rb.linearVelocity = turn * (firePoint.TransformDirection(bulletDirection) * bulletSpeed);
     }
 
     public void FireGrenade()
@@ -153,5 +213,22 @@ public class VehicleAttack : MonoBehaviour
         // On remet l'opacité à fond (1f) une fois le cooldown terminé
         buttonColor.a = 1f;
         grenadeButtonImage.color = buttonColor;
+    }
+
+    // --- NOUVEAU : timer UI du tir triple ---
+    private void UpdateTripleShotUI()
+    {
+        if (tripleShotTimerImage == null) return;
+
+        bool isActive = IsTripleShotActive;
+        if (tripleShotTimerImage.gameObject.activeSelf != isActive)
+        {
+            tripleShotTimerImage.gameObject.SetActive(isActive);
+        }
+
+        if (isActive)
+        {
+            tripleShotTimerImage.fillAmount = (tripleShotEndTime - Time.time) / tripleShotDuration;
+        }
     }
 }

@@ -14,15 +14,28 @@ public class ObstacleSpawner : MonoBehaviour
     private Transform vehicle;
     private CarLaneController carController;
 
+    // --- NOUVEAU : positions des points de spawn mémorisées au démarrage ---
+    // On n'utilise que X et Y (Z dépend du véhicule), donc on n'a plus besoin
+    // des Transforms pendant la partie, même s'ils sont détruits.
+    private readonly List<Vector2> lanePositions = new List<Vector2>();
+
     private void Start()
     {
-        GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
-        if (playerObj != null)
+        // Mémorise la position X/Y de chaque point de spawn valide
+        foreach (Transform point in spawnPoints)
         {
-            vehicle = playerObj.transform;
-            carController = playerObj.GetComponent<CarLaneController>();
+            if (point != null)
+            {
+                lanePositions.Add(new Vector2(point.position.x, point.position.y));
+            }
         }
 
+        if (lanePositions.Count == 0)
+        {
+            Debug.LogWarning("[ObstacleSpawner] Aucun Spawn Point assigné !", this);
+        }
+
+        RefreshVehicle();
         StartCoroutine(SpawnObstacles());
     }
 
@@ -32,8 +45,13 @@ public class ObstacleSpawner : MonoBehaviour
         {
             yield return new WaitForSeconds(spawnInterval);
 
+            // Retrouve le véhicule s'il a disparu ou a été changé
+            if (vehicle == null || !vehicle.gameObject.activeInHierarchy)
+            {
+                RefreshVehicle();
+            }
+
             // On vérifie si la voiture est arrêtée pour le boss
-            // Si c'est le cas, on passe notre tour et on ne fait rien
             if (carController != null && carController.isStoppedForBoss)
             {
                 continue;
@@ -43,20 +61,34 @@ public class ObstacleSpawner : MonoBehaviour
         }
     }
 
+    private void RefreshVehicle()
+    {
+        GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
+        if (playerObj != null)
+        {
+            vehicle = playerObj.transform;
+            carController = playerObj.GetComponent<CarLaneController>();
+        }
+        else
+        {
+            vehicle = null;
+            carController = null;
+        }
+    }
+
     private void SpawnObstacle()
     {
-        if (spawnPoints.Length == 0 || obstaclePrefabs.Length == 0 || vehicle == null)
+        if (lanePositions.Count == 0 || obstaclePrefabs.Length == 0 || vehicle == null)
             return;
 
-        int randomIndex = Random.Range(0, spawnPoints.Length);
-        Transform spawnPoint = spawnPoints[randomIndex];
+        Vector2 lane = lanePositions[Random.Range(0, lanePositions.Count)];
 
-        int randomObstacleIndex = Random.Range(0, obstaclePrefabs.Length);
-        GameObject selectedObstacle = obstaclePrefabs[randomObstacleIndex];
+        GameObject selectedObstacle = obstaclePrefabs[Random.Range(0, obstaclePrefabs.Length)];
+        if (selectedObstacle == null) return;
 
         Vector3 spawnPosition = new Vector3(
-            spawnPoint.position.x,
-            spawnPoint.position.y,
+            lane.x,
+            lane.y,
             vehicle.position.z + spawnDistance
         );
 

@@ -5,9 +5,24 @@ public class Bullet : MonoBehaviour
     [SerializeField] private GameObject hitVFX; // VFX à l'IMPACT (ex: explosion, étincelles)
     [SerializeField] private int damage = 10;   // Dégâts infligés
 
+    // --- NOUVEAU : empêche une balle de toucher deux cibles dans la même frame ---
+    private bool hasHit = false;
+
     private void OnTriggerEnter(Collider other)
     {
-        // 1. Vérifie si c'est un ennemi standard
+        if (hasHit) return;
+
+        // --- NOUVEAU : si la cible porte une armure active, la balle rebondit dessus ---
+        ArmoredZombie armoredZombie = other.GetComponentInParent<ArmoredZombie>();
+        if (armoredZombie != null && armoredZombie.IsArmorActive)
+        {
+            hasHit = true;
+            armoredZombie.AbsorbBulletHit(damage, transform.position);
+            Destroy(gameObject);
+            return;
+        }
+
+        // --- Ton code d'origine ---
         Health health = other.GetComponent<Health>();
         if (health != null)
         {
@@ -15,7 +30,6 @@ public class Bullet : MonoBehaviour
         }
         else
         {
-            // 2. Sinon, vérifie si c'est le Boss
             BossHealth bossHealth = other.GetComponent<BossHealth>();
             if (bossHealth != null)
             {
@@ -23,13 +37,12 @@ public class Bullet : MonoBehaviour
             }
         }
 
-        // Instancie le VFX d'impact (ex: explosion)
         if (hitVFX != null)
         {
             Instantiate(hitVFX, transform.position, Quaternion.identity);
         }
 
-        // Détruit la balle
+        hasHit = true;
         Destroy(gameObject);
     }
 }
