@@ -76,14 +76,14 @@ public class MainMenuManager : MonoBehaviour
 
             // Mise à jour UI
             if (progressBar != null) progressBar.value = displayProgress;
-            if (progressText != null) progressText.text = $"Chargement... {(displayProgress * 100f):F0}%";
+            if (progressText != null) progressText.text = $"{Loc.T("loading")} {(displayProgress * 100f):F0}%";
 
             yield return null;
         }
 
         // 4. Force la barre à 100%
         if (progressBar != null) progressBar.value = 1f;
-        if (progressText != null) progressText.text = "Chargement... 100%";
+        if (progressText != null) progressText.text = Loc.T("loading") + " 100%";
 
         // Petit délai imperceptible de 0.2s à 100% pour que le visuel soit propre
         yield return new WaitForSeconds(0.2f);

@@ -743,6 +743,8 @@ MonoBehaviour:
   - {fileID: 168641379458560854, guid: e4d5c304c8dce7941a0482a292266c3a, type: 3}
   - {fileID: 69562648628403455, guid: 6cd0eba302f763d43ad642feae14a4be, type: 3}
   - {fileID: 69562648628403455, guid: fb6c2086b9fcd8c42aeaf01fb81c387d, type: 3}
+  - {fileID: 69562648628403455, guid: 48309913911410540871455437a8299e, type: 3}
+  - {fileID: 69562648628403455, guid: e5b093abe9b56374190978fccb7f5eaa, type: 3}
   zombiesToSpawnCount: 3
   jumpHeight: 25
   jumpUpDuration: 0.6

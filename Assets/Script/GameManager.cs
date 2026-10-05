@@ -88,15 +88,15 @@ public class GameManager : MonoBehaviour
             int currentDistance = Mathf.RoundToInt(Mathf.Lerp(0, targetDistance, easeOutProgress));
             int currentZombie = Mathf.RoundToInt(Mathf.Lerp(0, targetZombie, easeOutProgress));
 
-            if (distText != null) distText.text = "Distance: " + currentDistance + "m";
-            if (zombText != null) zombText.text = "Zombies Tués: " + currentZombie;
+            if (distText != null) distText.text = Loc.T("distance") + ": " + currentDistance + "m";
+            if (zombText != null) zombText.text = Loc.T("zombies_killed") + ": " + currentZombie;
 
             yield return null;
         }
 
         // Sécurité : affiche le score final exact à la fin
-        if (distText != null) distText.text = "Distance: " + targetDistance + "m";
-        if (zombText != null) zombText.text = "Zombies Tués: " + targetZombie;
+        if (distText != null) distText.text = Loc.T("distance") + ": " + targetDistance + "m";
+        if (zombText != null) zombText.text = Loc.T("zombies_killed") + ": " + targetZombie;
     }
 
     public void OnRestartButtonClick()

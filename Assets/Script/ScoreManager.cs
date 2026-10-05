@@ -78,12 +78,12 @@ public class ScoreManager : MonoBehaviour
     {
         if (distanceScoreText != null)
         {
-            distanceScoreText.text = "Distance Score: " + Mathf.FloorToInt(distanceScore).ToString();
+            distanceScoreText.text = Loc.T("distance_score") + ": " + Mathf.FloorToInt(distanceScore).ToString();
         }
 
         if (zombieScoreText != null)
         {
-            zombieScoreText.text = "Zombie Score: " + zombieScore.ToString();
+            zombieScoreText.text = Loc.T("zombie_score") + ": " + zombieScore.ToString();
         }
     }
 
